@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package greeting;
+
+service UserService
+{
+  rpc CreateUser(UserRequest) returns (Response) {}
+  rpc UpdateUser(UserRequest) returns (Response) {}
+  rpc DeleteUser(DeleteUserRequest) returns (Response) {}
+  rpc GetTicker(GetTickerRequest) returns (Ticker) {}
+}
+
+message UserRequest
+{
+  string email = 1;
+  string ticker = 2;
+}
+
+message DeleteUserRequest
+{
+  string email = 1;
+}
+
+message Response
+{
+  string message = 1;
+}
+
+message GetTickerRequest
+{
+    string email = 1;
+}
+
+message Ticker
+{
+    string ticker = 1;
+}
