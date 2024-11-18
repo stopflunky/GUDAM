@@ -3,12 +3,13 @@ import grpc
 import file_pb2
 import file_pb2_grpc
 import psycopg2
+import yfinance as yf
 
 # Configura la connessione al database PostgreSQL
 DATABASE_CONFIG = {
-    "dbname": "nome_database",
-    "user": "nome_utente",
-    "password": "password",
+    "dbname": "provadata",
+    "user": "root",
+    "password": "1234",
     "host": "localhost",
     "port": "5432"
 }
@@ -23,11 +24,21 @@ class UserService(file_pb2_grpc.UserServiceServicer):
     def RegisterUser(self, request, context):
         try:
 
-            #### DA FARE una ricerca sull'esistenza o meno del ticker nel database
+            self.cursor.execute("SELECT ticker_name FROM tickers WHERE ticker_name = %s;", request.ticker)
+            result = self.cursor.fetchone()
+
+            if not result:
+                
+                stock = yf.Ticker(request.ticker)
+                last_price = stock.history(period="1d")["Close"].iloc[-1]
+
+                self.cursor.execute("INSERT INTO tickers (ticker_name, last_price) VALUES (%s, %s);", request.ticker, last_price)
+                self.conn.commit()
+
 
 
             self.cursor.execute(
-                "INSERT INTO utenti (email, codice_azione) VALUES (%s, %s) RETURNING id;",
+                "INSERT INTO utenti (email, ticker) VALUES (%s, %s) RETURNING id;",
                 (request.email, request.codice_azione)
             )
             self.conn.commit()
