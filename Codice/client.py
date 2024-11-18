@@ -4,9 +4,9 @@ import file_pb2_grpc
 
 def register_user(stub):
     email = input("Inserisci l'email dell'utente: ")
-    codice_azione = input("Inserisci il codice dell'azione (ticker): ")
-    request = file_pb2.UserRequest(email=email, codice_azione=codice_azione)
-    response = stub.RegisterUser(request)
+    ticker = input("Inserisci il codice dell'azione (ticker): ")
+    request = file_pb2.UserRequest(email=email, ticker=ticker)
+    response = stub.CreateUser(request)
     print(f"Risultato della registrazione: {response}")
 
 def update_user(stub):
@@ -19,13 +19,13 @@ def update_user(stub):
 def delete_user(stub):
     email = int(input("Inserisci l'email dell'utente da eliminare:"))
     request = file_pb2.DeleteUserRequest(email=email)
-    response = stub.Response(request)
+    response = stub.DeleteUser(request)
     print(f"Risultato dell'eliminazione: {response.message}")
 
 def get_latest_stock_value(stub):
     email = int(input("Inserisci l'email dell'utente per cui vuoi ottenere il valore del titolo: "))
     request = file_pb2.UserId(email=email)
-    response = stub.GetLatestStockValue(request)
+    response = stub.GetTicker(request)
     print(f"Ultimo valore del titolo: {response.valore}")
 
 def main():

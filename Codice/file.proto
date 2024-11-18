@@ -4,9 +4,9 @@ package greeting;
 
 service UserService
 {
-  rpc CreateUser(UserRequest) returns (Response) {}
-  rpc UpdateUser(UserRequest) returns (Response) {}
-  rpc DeleteUser(DeleteUserRequest) returns (Response) {}
+  rpc CreateUser(UserRequest) returns (UserResponse) {}
+  rpc UpdateUser(UserRequest) returns (UserResponse) {}
+  rpc DeleteUser(DeleteUserRequest) returns (UserResponse) {}
   rpc GetTicker(GetTickerRequest) returns (Ticker) {}
 }
 
@@ -21,7 +21,7 @@ message DeleteUserRequest
   string email = 1;
 }
 
-message Response
+message UserResponse
 {
   string message = 1;
 }

@@ -5,7 +5,7 @@ import warnings
 
 import file_pb2 as file__pb2
 
-GRPC_GENERATED_VERSION = '1.67.0'
+GRPC_GENERATED_VERSION = '1.67.1'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -37,17 +37,17 @@ class UserServiceStub(object):
         self.CreateUser = channel.unary_unary(
                 '/greeting.UserService/CreateUser',
                 request_serializer=file__pb2.UserRequest.SerializeToString,
-                response_deserializer=file__pb2.Response.FromString,
+                response_deserializer=file__pb2.UserResponse.FromString,
                 _registered_method=True)
         self.UpdateUser = channel.unary_unary(
                 '/greeting.UserService/UpdateUser',
                 request_serializer=file__pb2.UserRequest.SerializeToString,
-                response_deserializer=file__pb2.Response.FromString,
+                response_deserializer=file__pb2.UserResponse.FromString,
                 _registered_method=True)
         self.DeleteUser = channel.unary_unary(
                 '/greeting.UserService/DeleteUser',
                 request_serializer=file__pb2.DeleteUserRequest.SerializeToString,
-                response_deserializer=file__pb2.Response.FromString,
+                response_deserializer=file__pb2.UserResponse.FromString,
                 _registered_method=True)
         self.GetTicker = channel.unary_unary(
                 '/greeting.UserService/GetTicker',
@@ -89,17 +89,17 @@ def add_UserServiceServicer_to_server(servicer, server):
             'CreateUser': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateUser,
                     request_deserializer=file__pb2.UserRequest.FromString,
-                    response_serializer=file__pb2.Response.SerializeToString,
+                    response_serializer=file__pb2.UserResponse.SerializeToString,
             ),
             'UpdateUser': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateUser,
                     request_deserializer=file__pb2.UserRequest.FromString,
-                    response_serializer=file__pb2.Response.SerializeToString,
+                    response_serializer=file__pb2.UserResponse.SerializeToString,
             ),
             'DeleteUser': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteUser,
                     request_deserializer=file__pb2.DeleteUserRequest.FromString,
-                    response_serializer=file__pb2.Response.SerializeToString,
+                    response_serializer=file__pb2.UserResponse.SerializeToString,
             ),
             'GetTicker': grpc.unary_unary_rpc_method_handler(
                     servicer.GetTicker,
@@ -133,7 +133,7 @@ class UserService(object):
             target,
             '/greeting.UserService/CreateUser',
             file__pb2.UserRequest.SerializeToString,
-            file__pb2.Response.FromString,
+            file__pb2.UserResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -160,7 +160,7 @@ class UserService(object):
             target,
             '/greeting.UserService/UpdateUser',
             file__pb2.UserRequest.SerializeToString,
-            file__pb2.Response.FromString,
+            file__pb2.UserResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -187,7 +187,7 @@ class UserService(object):
             target,
             '/greeting.UserService/DeleteUser',
             file__pb2.DeleteUserRequest.SerializeToString,
-            file__pb2.Response.FromString,
+            file__pb2.UserResponse.FromString,
             options,
             channel_credentials,
             insecure,

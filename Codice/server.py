@@ -8,7 +8,7 @@ import yfinance as yf
 # Configura la connessione al database PostgreSQL
 DATABASE_CONFIG = {
     "dbname": "provadata",
-    "user": "root",
+    "user": "postgres",
     "password": "1234",
     "host": "localhost",
     "port": "5432"
@@ -21,7 +21,7 @@ class UserService(file_pb2_grpc.UserServiceServicer):
         self.conn = psycopg2.connect(**DATABASE_CONFIG)
         self.cursor = self.conn.cursor()
 
-    def RegisterUser(self, request, context):
+    def CreateUser(self, request, context):
         try:
 
             self.cursor.execute("SELECT ticker_name FROM tickers WHERE ticker_name = %s;", request.codice_azione)
@@ -82,7 +82,7 @@ class UserService(file_pb2_grpc.UserServiceServicer):
             return file_pb2.UserResponse(message=f"Errore durante l'eliminazione: {str(e)}")
 
 
-    def GetLatestStockValue(self, request, context):
+    def GetTicker(self, request, context):
         try:
             self.cursor.execute(
                 "SELECT last_ptice FROM tickers WHERE email = %s;",

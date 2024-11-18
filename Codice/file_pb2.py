@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nfile.proto\x12\x08greeting\",\n\x0bUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x0e\n\x06ticker\x18\x02 \x01(\t\"\"\n\x11\x44\x65leteUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\"\x1b\n\x08Response\x12\x0f\n\x07message\x18\x01 \x01(\t\"!\n\x10GetTickerRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\"\x18\n\x06Ticker\x12\x0e\n\x06ticker\x18\x01 \x01(\t2\x81\x02\n\x0bUserService\x12\x39\n\nCreateUser\x12\x15.greeting.UserRequest\x1a\x12.greeting.Response\"\x00\x12\x39\n\nUpdateUser\x12\x15.greeting.UserRequest\x1a\x12.greeting.Response\"\x00\x12?\n\nDeleteUser\x12\x1b.greeting.DeleteUserRequest\x1a\x12.greeting.Response\"\x00\x12;\n\tGetTicker\x12\x1a.greeting.GetTickerRequest\x1a\x10.greeting.Ticker\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nfile.proto\x12\x08greeting\",\n\x0bUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x0e\n\x06ticker\x18\x02 \x01(\t\"\"\n\x11\x44\x65leteUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\"\x1f\n\x0cUserResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"!\n\x10GetTickerRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\"\x18\n\x06Ticker\x12\x0e\n\x06ticker\x18\x01 \x01(\t2\x8d\x02\n\x0bUserService\x12=\n\nCreateUser\x12\x15.greeting.UserRequest\x1a\x16.greeting.UserResponse\"\x00\x12=\n\nUpdateUser\x12\x15.greeting.UserRequest\x1a\x16.greeting.UserResponse\"\x00\x12\x43\n\nDeleteUser\x12\x1b.greeting.DeleteUserRequest\x1a\x16.greeting.UserResponse\"\x00\x12;\n\tGetTicker\x12\x1a.greeting.GetTickerRequest\x1a\x10.greeting.Ticker\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,12 +35,12 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_USERREQUEST']._serialized_end=68
   _globals['_DELETEUSERREQUEST']._serialized_start=70
   _globals['_DELETEUSERREQUEST']._serialized_end=104
-  _globals['_RESPONSE']._serialized_start=106
-  _globals['_RESPONSE']._serialized_end=133
-  _globals['_GETTICKERREQUEST']._serialized_start=135
-  _globals['_GETTICKERREQUEST']._serialized_end=168
-  _globals['_TICKER']._serialized_start=170
-  _globals['_TICKER']._serialized_end=194
-  _globals['_USERSERVICE']._serialized_start=197
-  _globals['_USERSERVICE']._serialized_end=454
+  _globals['_USERRESPONSE']._serialized_start=106
+  _globals['_USERRESPONSE']._serialized_end=137
+  _globals['_GETTICKERREQUEST']._serialized_start=139
+  _globals['_GETTICKERREQUEST']._serialized_end=172
+  _globals['_TICKER']._serialized_start=174
+  _globals['_TICKER']._serialized_end=198
+  _globals['_USERSERVICE']._serialized_start=201
+  _globals['_USERSERVICE']._serialized_end=470
 # @@protoc_insertion_point(module_scope)
