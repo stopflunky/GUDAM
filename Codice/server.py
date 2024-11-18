@@ -22,13 +22,19 @@ class UserService(file_pb2_grpc.UserServiceServicer):
 
     def RegisterUser(self, request, context):
         try:
+
+            #### DA FARE una ricerca sull'esistenza o meno del ticker nel database
+
+
             self.cursor.execute(
                 "INSERT INTO utenti (email, codice_azione) VALUES (%s, %s) RETURNING id;",
                 (request.email, request.codice_azione)
             )
             self.conn.commit()
-            user_id = self.cursor.fetchone()[0]
-            return file_pb2.UserResponse(message=f"Utente registrato con ID {user_id}")
+
+            return file_pb2.UserResponse(message=f"Utente registrato con successo")
+        
+
         except psycopg2.IntegrityError:
             self.conn.rollback()
             return file_pb2.UserResponse(message="Errore: l'email è già registrata.")
@@ -68,12 +74,12 @@ class UserService(file_pb2_grpc.UserServiceServicer):
     def GetLatestStockValue(self, request, context):
         try:
             self.cursor.execute(
-                "SELECT valore, timestamp FROM dati_finanziari WHERE email = %s;",
+                "SELECT last_ptice FROM tickers WHERE email = %s;",
                 (request.email,)
             )
             result = self.cursor.fetchone()
             if result:
-                valore, timestamp = result
+                valore = result
                 return file_pb2.StockValueResponse(valore=valore)
             return file_pb2.StockValueResponse(valore=0.0)
         except Exception as e:
