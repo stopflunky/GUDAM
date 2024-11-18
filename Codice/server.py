@@ -24,7 +24,7 @@ class UserService(file_pb2_grpc.UserServiceServicer):
     def RegisterUser(self, request, context):
         try:
 
-            self.cursor.execute("SELECT ticker_name FROM tickers WHERE ticker_name = %s;", request.ticker)
+            self.cursor.execute("SELECT ticker_name FROM tickers WHERE ticker_name = %s;", request.codice_azione)
             result = self.cursor.fetchone()
 
             if not result:
@@ -32,7 +32,7 @@ class UserService(file_pb2_grpc.UserServiceServicer):
                 stock = yf.Ticker(request.ticker)
                 last_price = stock.history(period="1d")["Close"].iloc[-1]
 
-                self.cursor.execute("INSERT INTO tickers (ticker_name, last_price) VALUES (%s, %s);", request.ticker, last_price)
+                self.cursor.execute("INSERT INTO tickers (ticker_name, last_price) VALUES (%s, %s);", request.codice_azione, last_price)
                 self.conn.commit()
 
 
@@ -56,7 +56,7 @@ class UserService(file_pb2_grpc.UserServiceServicer):
     def UpdateUser(self, request, context):
         try:
             self.cursor.execute(
-                "UPDATE utenti SET codice_azione = %s WHERE email = %s;",
+                "UPDATE utenti SET ticker = %s WHERE email = %s;",
                 (request.codice_azione, request.email)
             )
             self.conn.commit()
