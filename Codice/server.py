@@ -24,7 +24,8 @@ class UserService(file_pb2_grpc.UserServiceServicer):
     def CreateUser(self, request, context):
         try:
 
-            self.cursor.execute("SELECT ticker_name FROM tickers WHERE ticker_name = %s;", request.codice_azione)
+            print("Request: ", request)
+            self.cursor.execute("SELECT ticker_name FROM tickers WHERE ticker_name = %s;", (request.ticker,))
             result = self.cursor.fetchone()
 
             if not result:
@@ -32,14 +33,14 @@ class UserService(file_pb2_grpc.UserServiceServicer):
                 stock = yf.Ticker(request.ticker)
                 last_price = stock.history(period="1d")["Close"].iloc[-1]
 
-                self.cursor.execute("INSERT INTO tickers (ticker_name, last_price) VALUES (%s, %s);", request.codice_azione, last_price)
+                self.cursor.execute("INSERT INTO tickers (ticker_name, last_price) VALUES (%s, %s);", (request.ticker, last_price))
                 self.conn.commit()
 
 
 
             self.cursor.execute(
-                "INSERT INTO utenti (email, ticker) VALUES (%s, %s) RETURNING id;",
-                (request.email, request.codice_azione)
+                "INSERT INTO users (email, ticker) VALUES (%s, %s);",
+                (request.email, request.ticker)
             )
             self.conn.commit()
 
@@ -56,7 +57,7 @@ class UserService(file_pb2_grpc.UserServiceServicer):
     def UpdateUser(self, request, context):
         try:
             self.cursor.execute(
-                "UPDATE utenti SET ticker = %s WHERE email = %s;",
+                "UPDATE users SET ticker = %s WHERE email = %s;",
                 (request.codice_azione, request.email)
             )
             self.conn.commit()
@@ -70,7 +71,7 @@ class UserService(file_pb2_grpc.UserServiceServicer):
     def DeleteUser(self, request, context):
         try:
             self.cursor.execute(
-                "DELETE FROM utenti WHERE email = %s;",
+                "DELETE FROM users WHERE email = %s;",
                 (request.email,)
             )
             self.conn.commit()
@@ -85,7 +86,7 @@ class UserService(file_pb2_grpc.UserServiceServicer):
     def GetTicker(self, request, context):
         try:
             self.cursor.execute(
-                "SELECT last_ptice FROM tickers WHERE email = %s;",
+                "SELECT last_price FROM tickers WHERE email = %s;",
                 (request.email,)
             )
             result = self.cursor.fetchone()
