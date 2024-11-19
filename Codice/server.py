@@ -1,3 +1,4 @@
+# Import delle librerie necessarie
 from concurrent import futures
 import grpc
 import file_pb2
@@ -5,11 +6,11 @@ import file_pb2_grpc
 import psycopg2
 import yfinance as yf
 
-# Configura la connessione al database PostgreSQL
+# Configurazione della connessione al DB
 DATABASE_CONFIG = {
-    "dbname": "provadata",
+    "dbname": "postgres",
     "user": "postgres",
-    "password": "1234",
+    "password": "Danilo2001",
     "host": "localhost",
     "port": "5432"
 }
@@ -17,42 +18,49 @@ DATABASE_CONFIG = {
 # Implementazione del server gRPC
 class UserService(file_pb2_grpc.UserServiceServicer):
     def __init__(self):
-        # Inizializza la connessione al database
         self.conn = psycopg2.connect(**DATABASE_CONFIG)
         self.cursor = self.conn.cursor()
 
+    # Funzione di creazione utente
     def CreateUser(self, request, context):
         try:
+            # Avvio di una transazione atomica
+            self.cursor.execute("BEGIN")
 
-            print("Request: ", request)
-            self.cursor.execute("SELECT ticker_name FROM tickers WHERE ticker_name = %s;", (request.ticker,))
-            result = self.cursor.fetchone()
+            # Ottiene il prezzo dell'azione
+            stock = yf.Ticker(request.ticker)
+            last_price = stock.history(period="1d")["Close"].iloc[-1]
+            last_price = float(last_price)
 
-            if not result:
-                
-                stock = yf.Ticker(request.ticker)
-                last_price = stock.history(period="1d")["Close"].iloc[-1]
+            # Tenta di inserire il ticker
+            self.cursor.execute("INSERT INTO tickers (ticker_name, last_price) VALUES (%s, %s) ON CONFLICT (ticker_name) DO NOTHING;",
+            (request.ticker, last_price))
 
-                self.cursor.execute("INSERT INTO tickers (ticker_name, last_price) VALUES (%s, %s);", (request.ticker, last_price))
-                self.conn.commit()
+            # Tenta di inserire l'utente
+            self.cursor.execute("INSERT INTO users (email, ticker) VALUES (%s, %s)",(request.email, request.ticker))
 
-
-
-            self.cursor.execute(
-                "INSERT INTO users (email, ticker) VALUES (%s, %s);",
-                (request.email, request.ticker)
-            )
+            # Conferma la transazione
             self.conn.commit()
 
-            return file_pb2.UserResponse(message=f"Utente registrato con successo")
-        
+            return file_pb2.UserResponse(message="Utente registrato con successo")
 
-        except psycopg2.IntegrityError:
+        # Eccezione in caso di problemi di integrità del DB
+        except psycopg2.IntegrityError as e:
             self.conn.rollback()
-            return file_pb2.UserResponse(message="Errore: l'email è già registrata.")
+            error_message = str(e)
+            if "users_email_key" in error_message:
+                return file_pb2.UserResponse(message="Errore: email già registrata.")
+            elif "tickers_pkey" in error_message:
+                return file_pb2.UserResponse(message="Errore: ticker già presente.")
+            else:
+                return file_pb2.UserResponse(message="Errore di integrità: impossibile registrare l'utente.")
+
+        # Eccezione generica
         except Exception as e:
             self.conn.rollback()
             return file_pb2.UserResponse(message=f"Errore durante la registrazione: {str(e)}")
+
+#------------------------------------------------------------
 
     def UpdateUser(self, request, context):
         try:

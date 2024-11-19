@@ -10,20 +10,20 @@ def register_user(stub):
     print(f"Risultato della registrazione: {response}")
 
 def update_user(stub):
-    email = int(input("Inserisci l'email dell'utente da aggiornare: "))
-    nuovo_codice_azione = input("Inserisci il nuovo codice dell'azione (ticker): ")
-    request = file_pb2.UserUpdateRequest(email=email, codice_azione=nuovo_codice_azione)
+    email = input("Inserisci l'email dell'utente da aggiornare: ")
+    nuovo_ticker= input("Inserisci il nuovo codice dell'azione (ticker): ")
+    request = file_pb2.UserUpdateRequest(email=email, ticker=nuovo_ticker)
     response = stub.UpdateUser(request)
     print(f"Risultato dell'aggiornamento: {response}")
 
 def delete_user(stub):
-    email = int(input("Inserisci l'email dell'utente da eliminare:"))
+    email = input("Inserisci l'email dell'utente da eliminare:")
     request = file_pb2.DeleteUserRequest(email=email)
     response = stub.DeleteUser(request)
     print(f"Risultato dell'eliminazione: {response.message}")
 
 def get_latest_stock_value(stub):
-    email = int(input("Inserisci l'email dell'utente per cui vuoi ottenere il valore del titolo: "))
+    email = input("Inserisci l'email dell'utente per cui vuoi ottenere il valore del titolo: ")
     request = file_pb2.UserId(email=email)
     response = stub.GetTicker(request)
     print(f"Ultimo valore del titolo: {response.valore}")
