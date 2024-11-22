@@ -7,7 +7,7 @@ service UserService
   rpc CreateUser(UserRequest) returns (UserResponse) {}
   rpc UpdateUser(UserRequest) returns (UserResponse) {}
   rpc DeleteUser(DeleteUserRequest) returns (UserResponse) {}
-  rpc GetTicker(GetTickerRequest) returns (Ticker) {}
+  rpc GetTicker(GetTickerRequest) returns (UserResponse) {}
 }
 
 message UserRequest
@@ -29,9 +29,4 @@ message UserResponse
 message GetTickerRequest
 {
     string email = 1;
-}
-
-message Ticker
-{
-    string ticker = 1;
 }

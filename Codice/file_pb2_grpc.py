@@ -5,7 +5,7 @@ import warnings
 
 import file_pb2 as file__pb2
 
-GRPC_GENERATED_VERSION = '1.67.1'
+GRPC_GENERATED_VERSION = '1.68.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -52,7 +52,7 @@ class UserServiceStub(object):
         self.GetTicker = channel.unary_unary(
                 '/greeting.UserService/GetTicker',
                 request_serializer=file__pb2.GetTickerRequest.SerializeToString,
-                response_deserializer=file__pb2.Ticker.FromString,
+                response_deserializer=file__pb2.UserResponse.FromString,
                 _registered_method=True)
 
 
@@ -104,7 +104,7 @@ def add_UserServiceServicer_to_server(servicer, server):
             'GetTicker': grpc.unary_unary_rpc_method_handler(
                     servicer.GetTicker,
                     request_deserializer=file__pb2.GetTickerRequest.FromString,
-                    response_serializer=file__pb2.Ticker.SerializeToString,
+                    response_serializer=file__pb2.UserResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -214,7 +214,7 @@ class UserService(object):
             target,
             '/greeting.UserService/GetTicker',
             file__pb2.GetTickerRequest.SerializeToString,
-            file__pb2.Ticker.FromString,
+            file__pb2.UserResponse.FromString,
             options,
             channel_credentials,
             insecure,

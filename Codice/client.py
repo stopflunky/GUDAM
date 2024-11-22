@@ -2,6 +2,7 @@ import grpc
 import file_pb2
 import file_pb2_grpc
 
+# Funzione per registrare un nuovo utente
 def register_user(stub):
     email = input("Inserisci l'email dell'utente: ")
     ticker = input("Inserisci il codice dell'azione (ticker): ")
@@ -9,25 +10,29 @@ def register_user(stub):
     response = stub.CreateUser(request)
     print(f"Risultato della registrazione: {response}")
 
+# Funzione per aggiornare il ticker di un utente
 def update_user(stub):
     email = input("Inserisci l'email dell'utente da aggiornare: ")
     nuovo_ticker= input("Inserisci il nuovo codice dell'azione (ticker): ")
-    request = file_pb2.UserUpdateRequest(email=email, ticker=nuovo_ticker)
+    request = file_pb2.UserRequest(email=email, ticker=nuovo_ticker)
     response = stub.UpdateUser(request)
     print(f"Risultato dell'aggiornamento: {response}")
 
+# Funzione per eliminare un utente
 def delete_user(stub):
     email = input("Inserisci l'email dell'utente da eliminare:")
     request = file_pb2.DeleteUserRequest(email=email)
     response = stub.DeleteUser(request)
     print(f"Risultato dell'eliminazione: {response.message}")
 
+# Funzione per ottenere l'ultimo valore del titolo di un utente
 def get_latest_stock_value(stub):
     email = input("Inserisci l'email dell'utente per cui vuoi ottenere il valore del titolo: ")
-    request = file_pb2.UserId(email=email)
+    request = file_pb2.GetTickerRequest(email=email)
     response = stub.GetTicker(request)
-    print(f"Ultimo valore del titolo: {response.valore}")
+    print(f"{response.message}")
 
+# Funzione principale
 def main():
     # Connessione al server gRPC
     with grpc.insecure_channel('localhost:50051') as channel:
