@@ -1,67 +1,224 @@
 import grpc
+import hashlib
 import file_pb2
 import file_pb2_grpc
+import uuid
+import time
+from grpc import RpcError
 
-# Funzione per registrare un nuovo utente
-def register_user(stub):
+is_authenticated = False # Variabile per memorizzare lo stato di autenticazione dell'utente
+current_email = None  # Variabile per memorizzare l'email dell'utente autenticato
+MAX_RETRIES = 3  # Numero massimo di tentativi
+TIMEOUT = 5  # Timeout in secondi per ogni tentativo
+
+#------------------------------------------------------------
+
+# Funzione per criptare la password con SHA-256
+def hash_password(password):
+    sha256_hash = hashlib.sha256()
+    sha256_hash.update(password.encode('utf-8'))
+    return sha256_hash.hexdigest()
+
+#------------------------------------------------------------
+
+# Funzione per verificare se il server è attivo
+def ping_server(stub):
+    try:
+        # Esegui il ping al server
+        ping_request = file_pb2.PingMessage(message="ping")
+        response = stub.Ping(ping_request)
+        return True
+    except RpcError as e:
+        return False
+    
+#------------------------------------------------------------
+
+# Funzione per effettuare il login di un utente
+def login_user(stub):
+    global is_authenticated, current_email
+
+    # Controlla se l'utente è già autenticato
+    if is_authenticated:
+        print("Sei già autenticato!")
+        return
+
+    email = input("Inserisci l'email dell'utente per il login: ")
+    password = input("Inserisci la password: ")
+    hashed_password = hash_password(password)
+    request = file_pb2.LoginRequest(email=email, password=hashed_password)
+
+    try:
+        response = stub.LoginUser(request)
+        if response.message == "Accesso riuscito!":
+            print(response.message)
+            is_authenticated = True
+            current_email = email
+        else:
+            print(response.message)
+    except RpcError as e:
+        print(f"Errore RPC: {e.code()} - {e.details()}")
+
+#------------------------------------------------------------
+
+# Funzione per registrare un nuovo utente con retry e timeout
+def create_user(stub):
+    global is_authenticated, current_email
+
+    if is_authenticated:
+        print("Sei già autenticato!")
+        return
+
     email = input("Inserisci l'email dell'utente: ")
-    ticker = input("Inserisci il codice dell'azione (ticker): ")
-    request = file_pb2.UserRequest(email=email, ticker=ticker)
-    response = stub.CreateUser(request)
-    print(f"Risultato della registrazione: {response}")
+    password = input("Inserisci la password: ")
+    hashed_password = hash_password(password)
+    ticker = input("Inserisci il ticker dell'utente: ")
+    request_id = str(uuid.uuid4())
+    request = file_pb2.RegisterRequest(email=email, password=hashed_password, ticker=ticker, requestID=request_id)
 
-# Funzione per aggiornare il ticker di un utente
+    retries = 0
+    while retries < MAX_RETRIES:
+        try:
+            response = stub.CreateUser(request, timeout=TIMEOUT)
+            if response.message == "Successo":
+                print("Registrazione riuscita!")
+                is_authenticated = True
+                current_email = email
+                return
+            else:
+                print(response.message)
+            break
+        
+        except RpcError as e:
+            print(f"Errore RPC: {e.code()} - {e.details()}")
+            retries += 1
+            if retries < MAX_RETRIES:
+                print(f"Riprovo... Tentativo {retries}/{MAX_RETRIES}")
+                time.sleep(2)
+            else:
+                print("Numero massimo di tentativi raggiunto.")
+                break
+
+#------------------------------------------------------------
+
+# Funzione per aggiornare il ticker dell'utente con retry e timeout
 def update_user(stub):
-    email = input("Inserisci l'email dell'utente da aggiornare: ")
-    nuovo_ticker= input("Inserisci il nuovo codice dell'azione (ticker): ")
-    request = file_pb2.UserRequest(email=email, ticker=nuovo_ticker)
-    response = stub.UpdateUser(request)
-    print(f"Risultato dell'aggiornamento: {response}")
+    if not is_authenticated:
+        print("Devi effettuare il login o la registrazione prima di aggiornare il ticker.")
+        return
+
+    ticker = input("Inserisci il nuovo ticker: ")
+    request_id = str(uuid.uuid4())
+    request = file_pb2.UserRequest(email=current_email, ticker=ticker, requestID=request_id)
+
+    retries = 0
+    while retries < MAX_RETRIES:
+        try:
+            response = stub.UpdateUser(request, timeout=TIMEOUT)
+            print(response.message)
+            return
+        except RpcError as e:
+            print(f"Errore RPC: {e.code()} - {e.details()}")
+            retries += 1
+            if retries < MAX_RETRIES:
+                print(f"Riprovo... Tentativo {retries}/{MAX_RETRIES}")
+                time.sleep(2)
+            else:
+                print("Numero massimo di tentativi raggiunto.")
+                break
+
+#------------------------------------------------------------
 
 # Funzione per eliminare un utente
 def delete_user(stub):
-    email = input("Inserisci l'email dell'utente da eliminare:")
-    request = file_pb2.DeleteUserRequest(email=email)
-    response = stub.DeleteUser(request)
-    print(f"Risultato dell'eliminazione: {response.message}")
+    if not is_authenticated:
+        print("Devi effettuare il login o la registrazione prima di eliminare un utente.")
+        return
 
-# Funzione per ottenere l'ultimo valore del titolo di un utente
-def get_latest_stock_value(stub):
-    email = input("Inserisci l'email dell'utente per cui vuoi ottenere il valore del titolo: ")
-    request = file_pb2.GetTickerRequest(email=email)
-    response = stub.GetTicker(request)
-    print(f"{response.message}")
+    request_id = str(uuid.uuid4())
+    request = file_pb2.UserRequest(email=current_email, requestID=request_id)
 
-# Funzione principale
-def main():
-    # Connessione al server gRPC
-    with grpc.insecure_channel('localhost:50051') as channel:
-        stub = file_pb2_grpc.UserServiceStub(channel)
-        
-        while True:
-            # Menu di scelta
-            print("\n--- Menu ---")
-            print("1. Registra un nuovo utente")
-            print("2. Aggiorna il codice dell'azione di un utente")
-            print("3. Elimina un utente")
-            print("4. Ottieni l'ultimo valore del titolo di un utente")
-            print("5. Esci")
-            
-            scelta = input("Scegli un'opzione: ")
+    try:
+        response = stub.DeleteUser(request)
+        print(response.message)
+    except RpcError as e:
+        print(f"Errore RPC: {e.code()} - {e.details()}")
 
-            if scelta == '1':
-                register_user(stub)
-            elif scelta == '2':
+#------------------------------------------------------------
+
+# Funzione per ottenere il ticker di un utente
+def get_ticker(stub):
+    if not is_authenticated:
+        print("Devi effettuare il login o la registrazione prima di ottenere il ticker.")
+        return
+
+    request_id = str(uuid.uuid4())
+    request = file_pb2.UserRequest(email=current_email, requestID=request_id)
+
+    try:
+        response = stub.GetTicker(request)
+        print(response.message)
+    except RpcError as e:
+        print(f"Errore RPC: {e.code()} - {e.details()}")
+
+#------------------------------------------------------------
+
+def run():
+    global is_authenticated
+    channel = grpc.insecure_channel('localhost:50051')
+    stub = file_pb2_grpc.UserServiceStub(channel)
+
+    # Verifica se il server è attivo prima di proseguire
+    if not ping_server(stub):
+        print("Il server non è disponibile. Uscita.")
+        return
+
+    # Menu principale
+    while True:
+        if is_authenticated:
+            print("\n1. Aggiorna ticker utente")
+            print("2. Elimina utente")
+            print("3. Ottieni ticker utente")
+            print("4. Esci (torna al login)")
+        else:
+            print("\n1. Login utente")
+            print("2. Crea nuovo utente")
+            print("3. Esci (chiudi il programma)")
+
+        choice = input("Scegli un'opzione: ")
+
+        if choice == '1':
+            if is_authenticated:
                 update_user(stub)
-            elif scelta == '3':
-                delete_user(stub)
-            elif scelta == '4':
-                get_latest_stock_value(stub)
-            elif scelta == '5':
-                print("Uscita...")
-                break
             else:
-                print("Scelta non valida. Riprova.")
+                login_user(stub)
+        elif choice == '2':
+            if is_authenticated:
+                delete_user(stub)
+                is_authenticated = False
+                current_email = None
+            else:
+                create_user(stub)
+        elif choice == '3':
+            if is_authenticated:
+                get_ticker(stub)
+            else:
+                if is_authenticated:
+                    print("Uscita...")
+                    break
+                else:
+                    print("Uscita dal programma...")
+                    break
+        elif choice == '2':
+            print("Torna al login")
+        elif choice == '4' and is_authenticated:
+            is_authenticated = False
+            current_email = None
+            print("Sei stato disconnesso. Torna al login.")
+        elif choice == '3' and not is_authenticated:
+            print("Uscita dal programma...")
+            break
+        else:
+            print("Opzione non valida.")
 
 if __name__ == "__main__":
-    main()
+    run()

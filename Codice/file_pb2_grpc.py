@@ -34,9 +34,19 @@ class UserServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.Ping = channel.unary_unary(
+                '/greeting.UserService/Ping',
+                request_serializer=file__pb2.PingMessage.SerializeToString,
+                response_deserializer=file__pb2.PingMessage.FromString,
+                _registered_method=True)
+        self.LoginUser = channel.unary_unary(
+                '/greeting.UserService/LoginUser',
+                request_serializer=file__pb2.LoginRequest.SerializeToString,
+                response_deserializer=file__pb2.UserResponse.FromString,
+                _registered_method=True)
         self.CreateUser = channel.unary_unary(
                 '/greeting.UserService/CreateUser',
-                request_serializer=file__pb2.UserRequest.SerializeToString,
+                request_serializer=file__pb2.RegisterRequest.SerializeToString,
                 response_deserializer=file__pb2.UserResponse.FromString,
                 _registered_method=True)
         self.UpdateUser = channel.unary_unary(
@@ -58,6 +68,18 @@ class UserServiceStub(object):
 
 class UserServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
+
+    def Ping(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def LoginUser(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def CreateUser(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -86,9 +108,19 @@ class UserServiceServicer(object):
 
 def add_UserServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'Ping': grpc.unary_unary_rpc_method_handler(
+                    servicer.Ping,
+                    request_deserializer=file__pb2.PingMessage.FromString,
+                    response_serializer=file__pb2.PingMessage.SerializeToString,
+            ),
+            'LoginUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.LoginUser,
+                    request_deserializer=file__pb2.LoginRequest.FromString,
+                    response_serializer=file__pb2.UserResponse.SerializeToString,
+            ),
             'CreateUser': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateUser,
-                    request_deserializer=file__pb2.UserRequest.FromString,
+                    request_deserializer=file__pb2.RegisterRequest.FromString,
                     response_serializer=file__pb2.UserResponse.SerializeToString,
             ),
             'UpdateUser': grpc.unary_unary_rpc_method_handler(
@@ -118,6 +150,60 @@ class UserService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
+    def Ping(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/greeting.UserService/Ping',
+            file__pb2.PingMessage.SerializeToString,
+            file__pb2.PingMessage.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def LoginUser(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/greeting.UserService/LoginUser',
+            file__pb2.LoginRequest.SerializeToString,
+            file__pb2.UserResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
     def CreateUser(request,
             target,
             options=(),
@@ -132,7 +218,7 @@ class UserService(object):
             request,
             target,
             '/greeting.UserService/CreateUser',
-            file__pb2.UserRequest.SerializeToString,
+            file__pb2.RegisterRequest.SerializeToString,
             file__pb2.UserResponse.FromString,
             options,
             channel_credentials,

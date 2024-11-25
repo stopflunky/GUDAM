@@ -24,21 +24,27 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nfile.proto\x12\x08greeting\",\n\x0bUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x0e\n\x06ticker\x18\x02 \x01(\t\"\"\n\x11\x44\x65leteUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\"\x1f\n\x0cUserResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"!\n\x10GetTickerRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t2\x93\x02\n\x0bUserService\x12=\n\nCreateUser\x12\x15.greeting.UserRequest\x1a\x16.greeting.UserResponse\"\x00\x12=\n\nUpdateUser\x12\x15.greeting.UserRequest\x1a\x16.greeting.UserResponse\"\x00\x12\x43\n\nDeleteUser\x12\x1b.greeting.DeleteUserRequest\x1a\x16.greeting.UserResponse\"\x00\x12\x41\n\tGetTicker\x12\x1a.greeting.GetTickerRequest\x1a\x16.greeting.UserResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nfile.proto\x12\x08greeting\"\x1e\n\x0bPingMessage\x12\x0f\n\x07message\x18\x01 \x01(\t\"/\n\x0cLoginRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"U\n\x0fRegisterRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x0e\n\x06ticker\x18\x03 \x01(\t\x12\x11\n\trequestID\x18\x04 \x01(\t\"?\n\x0bUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x0e\n\x06ticker\x18\x02 \x01(\t\x12\x11\n\trequestID\x18\x03 \x01(\t\"5\n\x11\x44\x65leteUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x11\n\trequestID\x18\x02 \x01(\t\"\x1f\n\x0cUserResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"!\n\x10GetTickerRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t2\x8e\x03\n\x0bUserService\x12\x36\n\x04Ping\x12\x15.greeting.PingMessage\x1a\x15.greeting.PingMessage\"\x00\x12=\n\tLoginUser\x12\x16.greeting.LoginRequest\x1a\x16.greeting.UserResponse\"\x00\x12\x41\n\nCreateUser\x12\x19.greeting.RegisterRequest\x1a\x16.greeting.UserResponse\"\x00\x12=\n\nUpdateUser\x12\x15.greeting.UserRequest\x1a\x16.greeting.UserResponse\"\x00\x12\x43\n\nDeleteUser\x12\x1b.greeting.DeleteUserRequest\x1a\x16.greeting.UserResponse\"\x00\x12\x41\n\tGetTicker\x12\x1a.greeting.GetTickerRequest\x1a\x16.greeting.UserResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'file_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_USERREQUEST']._serialized_start=24
-  _globals['_USERREQUEST']._serialized_end=68
-  _globals['_DELETEUSERREQUEST']._serialized_start=70
-  _globals['_DELETEUSERREQUEST']._serialized_end=104
-  _globals['_USERRESPONSE']._serialized_start=106
-  _globals['_USERRESPONSE']._serialized_end=137
-  _globals['_GETTICKERREQUEST']._serialized_start=139
-  _globals['_GETTICKERREQUEST']._serialized_end=172
-  _globals['_USERSERVICE']._serialized_start=175
-  _globals['_USERSERVICE']._serialized_end=450
+  _globals['_PINGMESSAGE']._serialized_start=24
+  _globals['_PINGMESSAGE']._serialized_end=54
+  _globals['_LOGINREQUEST']._serialized_start=56
+  _globals['_LOGINREQUEST']._serialized_end=103
+  _globals['_REGISTERREQUEST']._serialized_start=105
+  _globals['_REGISTERREQUEST']._serialized_end=190
+  _globals['_USERREQUEST']._serialized_start=192
+  _globals['_USERREQUEST']._serialized_end=255
+  _globals['_DELETEUSERREQUEST']._serialized_start=257
+  _globals['_DELETEUSERREQUEST']._serialized_end=310
+  _globals['_USERRESPONSE']._serialized_start=312
+  _globals['_USERRESPONSE']._serialized_end=343
+  _globals['_GETTICKERREQUEST']._serialized_start=345
+  _globals['_GETTICKERREQUEST']._serialized_end=378
+  _globals['_USERSERVICE']._serialized_start=381
+  _globals['_USERSERVICE']._serialized_end=779
 # @@protoc_insertion_point(module_scope)

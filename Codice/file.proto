@@ -4,21 +4,44 @@ package greeting;
 
 service UserService
 {
-  rpc CreateUser(UserRequest) returns (UserResponse) {}
+  rpc Ping(PingMessage) returns (PingMessage) {}
+  rpc LoginUser(LoginRequest) returns (UserResponse) {}
+  rpc CreateUser(RegisterRequest) returns (UserResponse) {}
   rpc UpdateUser(UserRequest) returns (UserResponse) {}
   rpc DeleteUser(DeleteUserRequest) returns (UserResponse) {}
   rpc GetTicker(GetTickerRequest) returns (UserResponse) {}
+}
+
+message PingMessage
+{
+  string message = 1;
+}
+
+message LoginRequest
+{
+  string email = 1;
+  string password = 2;
+}
+
+message RegisterRequest
+{
+  string email = 1;
+  string password = 2;
+  string ticker = 3;
+  string requestID = 4;
 }
 
 message UserRequest
 {
   string email = 1;
   string ticker = 2;
+  string requestID = 3;
 }
 
 message DeleteUserRequest
 {
   string email = 1;
+  string requestID = 2;
 }
 
 message UserResponse
