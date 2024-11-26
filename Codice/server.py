@@ -6,6 +6,7 @@ import file_pb2
 import file_pb2_grpc
 import psycopg2
 import yfinance as yf
+from datetime import datetime, timedelta
 
 #------------------------------------------------------------
 
@@ -155,7 +156,7 @@ class UserService(file_pb2_grpc.UserServiceServicer):
 #------------------------------------------------------------
 
     # Funzione di cancellazione di un utente
-    def DeleteUser(self, request, context):
+    def DeleteUser(self, request, context):         
         try:
             # Cerca l'utente nel DB
             self.cursor.execute("DELETE FROM users WHERE email = %s;",(request.email,))
@@ -163,8 +164,8 @@ class UserService(file_pb2_grpc.UserServiceServicer):
             # Se non trova l'utente, restituisce un messaggio di errore, altrimenti conferma l'eliminazione
             if self.cursor.rowcount == 0:
                 return file_pb2.UserResponse(message="Errore: utente non trovato.")
-            return file_pb2.UserResponse(message="Utente eliminato con successo.")
-        
+            response = file_pb2.UserResponse(message="Utente eliminato con successo.")
+
         # Gestione delle eccezioni
         except Exception as e:
             self.conn.rollback()
@@ -172,6 +173,7 @@ class UserService(file_pb2_grpc.UserServiceServicer):
 
 #------------------------------------------------------------
 
+    # Funzione per ottenere il ticker di un utente
     def GetTicker(self, request, context):
         try:
             # Cerca l'utente nel DB e ottiene il suo ticker
@@ -182,15 +184,45 @@ class UserService(file_pb2_grpc.UserServiceServicer):
                 return file_pb2.UserResponse(message="Errore: utente non trovato. Deve essere registrato.")
             
             ticker = result[0]
+            print(f"Ticker: {ticker}")
 
             # Cerca il valore del ticker nel DB
             self.cursor.execute("SELECT last_price FROM tickers WHERE ticker_name = %s;", (ticker,))
             result = self.cursor.fetchone()
             if result:
-                return file_pb2.UserResponse(message=f"Ticker: {ticker}, Valore: {result[0]}")
+                response = file_pb2.UserResponse(message=f"Ticker: {ticker}, Valore: {result[0]}")
             else:
-                return file_pb2.UserResponse(message="Errore: valore del titolo non trovato.")
+                response =  file_pb2.UserResponse(message="Errore: valore del titolo non trovato.")
             
+        # Gestione delle eccezioni
+        except Exception as e:
+            return file_pb2.UserResponse(message=f"Errore durante la ricerca del valore del titolo: {str(e)}")
+
+#------------------------------------------------------------
+
+    # Funzione per ottenere la media degli ultimi X giorni di un ticker
+    def GetAvaragePriceOfXDays(self, request, contest):
+
+        try:
+            days = int(request.days)
+
+            self.cursor.execute("SELECT ticker FROM users WHERE email = %s;", (request.email,))
+            result = self.cursor.fetchone()
+            # Se non trovo l'utente, restituisco un messaggio di errore
+            if not result:
+                return file_pb2.UserResponse(message="Errore: utente non trovato. Deve essere registrato.")
+            
+            ticker = yf.Ticker(result[0])
+
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days)
+
+            data = ticker.history(start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
+
+            closing_price_average = data['Close'].mean()
+
+            response =  file_pb2.UserResponse(message=f"Media degli ultimi {days} giorni: {closing_price_average}")
+
         # Gestione delle eccezioni
         except Exception as e:
             return file_pb2.UserResponse(message=f"Errore durante la ricerca del valore del titolo: {str(e)}")
