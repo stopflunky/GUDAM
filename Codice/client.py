@@ -134,7 +134,7 @@ def update_user(stub):
         try:
             response = stub.UpdateUser(request, timeout=TIMEOUT)
             print(response.message)
-            time.sleep(1)
+            time.sleep(2)
             clear_terminal()
             return
         except RpcError as e:
@@ -163,7 +163,7 @@ def delete_user(stub):
     try:
         response = stub.DeleteUser(request)
         print(response.message)
-        time.sleep(1)
+        time.sleep(2)
         clear_terminal()
     except RpcError as e:
         print(f"Errore RPC: {e.code()} - {e.details()}")
@@ -183,7 +183,7 @@ def get_ticker(stub):
     try:
         response = stub.GetTicker(request)
         print(response.message)
-        time.sleep(1)
+        time.sleep(2)
         clear_terminal()
     except RpcError as e:
         print(f"Errore RPC: {e.code()} - {e.details()}")
@@ -195,18 +195,18 @@ def GetAvaragePriceOfXDays(stub):
     if not is_authenticated:
         clear_terminal()
         print("Devi effettuare il login o la registrazione prima di ottenere il ticker.")
-        time.sleep(1)
+        time.sleep(2)
         clear_terminal()
         return
 
     days = input("Inserisci il numero di valori: ")
-    time.sleep(1)
-    clear_terminal()
     request = file_pb2.GetAvarageXDaysRequest(days=days, email=current_email)
 
     try:
         response = stub.GetAvaragePriceOfXDays(request)
         print(response.message)
+        time.sleep(2)
+        clear_terminal()
     except RpcError as e:
         print(f"Errore RPC: {e.code()} - {e.details()}")
 

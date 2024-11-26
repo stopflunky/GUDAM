@@ -190,9 +190,9 @@ class UserService(file_pb2_grpc.UserServiceServicer):
             self.cursor.execute("SELECT last_price FROM tickers WHERE ticker_name = %s;", (ticker,))
             result = self.cursor.fetchone()
             if result:
-                response = file_pb2.UserResponse(message=f"Ticker: {ticker}, Valore: {result[0]}")
+                return file_pb2.UserResponse(message=f"Ticker: {ticker}, Valore: {result[0]}")
             else:
-                response =  file_pb2.UserResponse(message="Errore: valore del titolo non trovato.")
+                return file_pb2.UserResponse(message="Errore: valore del titolo non trovato.")
             
         # Gestione delle eccezioni
         except Exception as e:
@@ -221,7 +221,7 @@ class UserService(file_pb2_grpc.UserServiceServicer):
 
             closing_price_average = data['Close'].mean()
 
-            response =  file_pb2.UserResponse(message=f"Media degli ultimi {days} giorni: {closing_price_average}")
+            return file_pb2.UserResponse(message=f"Media degli ultimi {days} giorni: {closing_price_average}")
 
         # Gestione delle eccezioni
         except Exception as e:
