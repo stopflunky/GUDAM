@@ -10,6 +10,7 @@ service UserService
   rpc UpdateUser(UserRequest) returns (UserResponse) {}
   rpc DeleteUser(DeleteUserRequest) returns (UserResponse) {}
   rpc GetTicker(GetTickerRequest) returns (UserResponse) {}
+  rpc GetAvaragePriceOfXDays(GetAvarageXDaysRequest) returns (UserResponse){}
 }
 
 message PingMessage
@@ -52,4 +53,11 @@ message UserResponse
 message GetTickerRequest
 {
     string email = 1;
+}
+
+message GetAvarageXDaysRequest
+{
+  string days = 1;
+  string email = 2;
+  string requestID = 3;
 }

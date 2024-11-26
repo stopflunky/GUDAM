@@ -4,12 +4,26 @@ import file_pb2
 import file_pb2_grpc
 import uuid
 import time
+import os
+import platform
 from grpc import RpcError
 
 is_authenticated = False # Variabile per memorizzare lo stato di autenticazione dell'utente
 current_email = None  # Variabile per memorizzare l'email dell'utente autenticato
 MAX_RETRIES = 3  # Numero massimo di tentativi
 TIMEOUT = 5  # Timeout in secondi per ogni tentativo
+
+
+#------------------------------------------------------------
+
+# Funzione per pulire il terminale
+def clear_terminal():
+    
+    if platform.system() == "Windows":
+        os.system("cls")
+    else:
+        os.system("clear")
+
 
 #------------------------------------------------------------
 
@@ -51,12 +65,15 @@ def login_user(stub):
         response = stub.LoginUser(request)
         if response.message == "Accesso riuscito!":
             print(response.message)
+            clear_terminal()
             is_authenticated = True
             current_email = email
         else:
             print(response.message)
+            clear_terminal()
     except RpcError as e:
         print(f"Errore RPC: {e.code()} - {e.details()}")
+        
 
 #------------------------------------------------------------
 
@@ -71,6 +88,7 @@ def create_user(stub):
     email = input("Inserisci l'email dell'utente: ")
     password = input("Inserisci la password: ")
     hashed_password = hash_password(password)
+    clear_terminal()
     ticker = input("Inserisci il ticker dell'utente: ")
     request_id = str(uuid.uuid4())
     request = file_pb2.RegisterRequest(email=email, password=hashed_password, ticker=ticker, requestID=request_id)
@@ -80,6 +98,7 @@ def create_user(stub):
         try:
             response = stub.CreateUser(request, timeout=TIMEOUT)
             if response.message == "Successo":
+                clear_terminal()
                 print("Registrazione riuscita!")
                 is_authenticated = True
                 current_email = email
@@ -95,6 +114,7 @@ def create_user(stub):
                 print(f"Riprovo... Tentativo {retries}/{MAX_RETRIES}")
                 time.sleep(2)
             else:
+                clear_terminal()
                 print("Numero massimo di tentativi raggiunto.")
                 break
 
@@ -103,6 +123,7 @@ def create_user(stub):
 # Funzione per aggiornare il ticker dell'utente con retry e timeout
 def update_user(stub):
     if not is_authenticated:
+        clear_terminal()
         print("Devi effettuare il login o la registrazione prima di aggiornare il ticker.")
         return
 
@@ -114,6 +135,7 @@ def update_user(stub):
     while retries < MAX_RETRIES:
         try:
             response = stub.UpdateUser(request, timeout=TIMEOUT)
+            clear_terminal()
             print(response.message)
             return
         except RpcError as e:
@@ -123,6 +145,7 @@ def update_user(stub):
                 print(f"Riprovo... Tentativo {retries}/{MAX_RETRIES}")
                 time.sleep(2)
             else:
+                clear_terminal()
                 print("Numero massimo di tentativi raggiunto.")
                 break
 
@@ -131,6 +154,7 @@ def update_user(stub):
 # Funzione per eliminare un utente
 def delete_user(stub):
     if not is_authenticated:
+        clear_terminal()
         print("Devi effettuare il login o la registrazione prima di eliminare un utente.")
         return
 
@@ -148,6 +172,7 @@ def delete_user(stub):
 # Funzione per ottenere il ticker di un utente
 def get_ticker(stub):
     if not is_authenticated:
+        clear_terminal()
         print("Devi effettuare il login o la registrazione prima di ottenere il ticker.")
         return
 
@@ -161,6 +186,31 @@ def get_ticker(stub):
         print(f"Errore RPC: {e.code()} - {e.details()}")
 
 #------------------------------------------------------------
+
+# Funzione per ottenere la media degli ultimi X giorni di un ticker
+def GetAvaragePriceOfXDays(stub):
+    if not is_authenticated:
+        clear_terminal()
+        print("Devi effettuare il login o la registrazione prima di ottenere il ticker.")
+        time.sleep(1)
+        clear_terminal()
+        return
+
+    days = input("Inserisci il numero di giorni per la media: ")
+    time.sleep(1)
+    clear_terminal()
+    request_id = str(uuid.uuid4())
+    request = file_pb2.GetAvarageXDaysRequest(days=days, email=current_email, requestID=request_id)
+
+    try:
+        response = stub.GetAvaragePriceOfXDays(request)
+        print(response.message)
+    except RpcError as e:
+        print(f"Errore RPC: {e.code()} - {e.details()}")
+
+#------------------------------------------------------------
+
+
 
 def run():
     global is_authenticated
@@ -178,7 +228,8 @@ def run():
             print("\n1. Aggiorna ticker utente")
             print("2. Elimina utente")
             print("3. Ottieni ticker utente")
-            print("4. Esci (torna al login)")
+            print("4. Ottieni la media degli ultimi X giorni di un ticker: ")
+            print("5. Esci (torna al login)")
         else:
             print("\n1. Login utente")
             print("2. Crea nuovo utente")
@@ -211,9 +262,13 @@ def run():
         elif choice == '2':
             print("Torna al login")
         elif choice == '4' and is_authenticated:
+            GetAvaragePriceOfXDays(stub)
+        elif choice == '5' and is_authenticated:
             is_authenticated = False
             current_email = None
             print("Sei stato disconnesso. Torna al login.")
+            time.sleep(1)
+            clear_terminal()
         elif choice == '3' and not is_authenticated:
             print("Uscita dal programma...")
             break
