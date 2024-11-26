@@ -5,7 +5,7 @@ import warnings
 
 import file_pb2 as file__pb2
 
-GRPC_GENERATED_VERSION = '1.67.1'
+GRPC_GENERATED_VERSION = '1.68.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -64,11 +64,6 @@ class UserServiceStub(object):
                 request_serializer=file__pb2.GetTickerRequest.SerializeToString,
                 response_deserializer=file__pb2.UserResponse.FromString,
                 _registered_method=True)
-        self.GetAvaragePriceOfXDays = channel.unary_unary(
-                '/greeting.UserService/GetAvaragePriceOfXDays',
-                request_serializer=file__pb2.GetAvarageXDaysRequest.SerializeToString,
-                response_deserializer=file__pb2.UserResponse.FromString,
-                _registered_method=True)
 
 
 class UserServiceServicer(object):
@@ -110,12 +105,6 @@ class UserServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetAvaragePriceOfXDays(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
 
 def add_UserServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -147,11 +136,6 @@ def add_UserServiceServicer_to_server(servicer, server):
             'GetTicker': grpc.unary_unary_rpc_method_handler(
                     servicer.GetTicker,
                     request_deserializer=file__pb2.GetTickerRequest.FromString,
-                    response_serializer=file__pb2.UserResponse.SerializeToString,
-            ),
-            'GetAvaragePriceOfXDays': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetAvaragePriceOfXDays,
-                    request_deserializer=file__pb2.GetAvarageXDaysRequest.FromString,
                     response_serializer=file__pb2.UserResponse.SerializeToString,
             ),
     }
@@ -316,33 +300,6 @@ class UserService(object):
             target,
             '/greeting.UserService/GetTicker',
             file__pb2.GetTickerRequest.SerializeToString,
-            file__pb2.UserResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def GetAvaragePriceOfXDays(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/greeting.UserService/GetAvaragePriceOfXDays',
-            file__pb2.GetAvarageXDaysRequest.SerializeToString,
             file__pb2.UserResponse.FromString,
             options,
             channel_credentials,

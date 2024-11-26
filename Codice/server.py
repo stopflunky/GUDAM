@@ -6,15 +6,14 @@ import file_pb2
 import file_pb2_grpc
 import psycopg2
 import yfinance as yf
-from datetime import datetime, timedelta
 
 #------------------------------------------------------------
 
 # Configurazione della connessione al DB
 DATABASE_CONFIG = {
-    "dbname": "provadata",
+    "dbname": "postgres",
     "user": "postgres",
-    "password": "1234",
+    "password": "Danilo2001",
     "host": "localhost",
     "port": "5432"
 }
@@ -173,7 +172,6 @@ class UserService(file_pb2_grpc.UserServiceServicer):
 
 #------------------------------------------------------------
 
-    # Funzione per ottenere il ticker di un utente
     def GetTicker(self, request, context):
         try:
             # Cerca l'utente nel DB e ottiene il suo ticker
@@ -196,41 +194,6 @@ class UserService(file_pb2_grpc.UserServiceServicer):
         # Gestione delle eccezioni
         except Exception as e:
             return file_pb2.UserResponse(message=f"Errore durante la ricerca del valore del titolo: {str(e)}")
-
-#------------------------------------------------------------
-
-
-    # Funzione per ottenere la media degli ultimi X giorni di un ticker
-    def GetAvaragePriceOfXDays(self, request, contest):
-
-        try:
-
-
-            days = int(request.days)
-
-            self.cursor.execute("SELECT ticker FROM users WHERE email = %s;", (request.email,))
-            result = self.cursor.fetchone()
-            # Se non trovo l'utente, restituisco un messaggio di errore
-            if not result:
-                return file_pb2.UserResponse(message="Errore: utente non trovato. Deve essere registrato.")
-            
-            ticker = yf.Ticker(result[0])
-
-            end_date = datetime.now()
-            start_date = end_date - timedelta(days)
-
-            data = ticker.history(start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
-
-            closing_price_average = data['Close'].mean()
-
-            return file_pb2.UserResponse(message=f"Media degli ultimi {days} giorni: {closing_price_average}")
-
-
-
-        except Exception as e:
-            return file_pb2.UserResponse(message=f"Errore durante la ricerca del valore del titolo: {str(e)}")
-
-
 
 #------------------------------------------------------------
 
