@@ -1,0 +1,6 @@
+grpcio
+grpcio-tools
+protobuf
+yfinance
+psycopg2-binary
+python-dateutil
