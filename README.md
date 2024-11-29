@@ -2,12 +2,6 @@
 
 <br>
 
-<br>
-
-<br>
-
-<br>
-
 # Build & Deploy Document
 
 ## prerequisites:
