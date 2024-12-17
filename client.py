@@ -34,11 +34,11 @@ def hash_password(password):
 #------------------------------------------------------------
 
 # Funzione per verificare se il server è attivo
-def ping_server(stub):
+def ping_server(query_stub):
     try:
         # Esegui il ping al server
         ping_request = file_pb2.PingMessage(message="ping")
-        response = stub.Ping(ping_request)
+        response = query_stub.Ping(ping_request)
         return True
     except RpcError as e:
         return False
@@ -46,7 +46,7 @@ def ping_server(stub):
 #------------------------------------------------------------
 
 # Funzione per effettuare il login di un utente
-def login_user(stub):
+def login_user(query_stub):
     global is_authenticated, current_email
 
     # Controlla se l'utente è già autenticato
@@ -62,7 +62,7 @@ def login_user(stub):
     request = file_pb2.LoginRequest(email=email, password=hashed_password)
 
     try:
-        response = stub.LoginUser(request)
+        response = query_stub.LoginUser(request)
         if response.message == "Accesso riuscito!":
             print(response.message)
             time.sleep(2)
@@ -79,7 +79,7 @@ def login_user(stub):
 #------------------------------------------------------------
 
 # Funzione per registrare un nuovo utente con retry e timeout
-def create_user(stub):
+def create_user(command_stub):
     global is_authenticated, current_email
 
     if is_authenticated:
@@ -98,7 +98,7 @@ def create_user(stub):
     retries = 0
     while retries < MAX_RETRIES:
         try:
-            response = stub.CreateUser(request, timeout=TIMEOUT)
+            response = command_stub.CreateUser(request, timeout=TIMEOUT)
             if response.message == "Successo":
                 print("Registrazione riuscita!")
                 time.sleep(2)
@@ -126,7 +126,7 @@ def create_user(stub):
 #------------------------------------------------------------
 
 # Funzione per aggiornare il ticker dell'utente con retry e timeout
-def update_user(stub):
+def update_user(command_stub):
     if not is_authenticated:
         clear_terminal()
         print("Devi effettuare il login o la registrazione prima di aggiornare il ticker.")
@@ -141,7 +141,7 @@ def update_user(stub):
     retries = 0
     while retries < MAX_RETRIES:
         try:
-            response = stub.UpdateUser(request, timeout=TIMEOUT)
+            response = command_stub.UpdateUser(request, timeout=TIMEOUT)
             print(response.message)
             time.sleep(2)
             clear_terminal()
@@ -162,7 +162,7 @@ def update_user(stub):
 #------------------------------------------------------------
 
 # Funzione per eliminare un utente
-def delete_user(stub):
+def delete_user(command_stub):
     if not is_authenticated:
         print("Devi effettuare il login o la registrazione prima di eliminare un utente.")
         time.sleep(2)
@@ -173,7 +173,7 @@ def delete_user(stub):
     request = file_pb2.UserRequest(email=current_email, requestID=request_id)
 
     try:
-        response = stub.DeleteUser(request)
+        response = command_stub.DeleteUser(request)
         print(response.message)
         time.sleep(2)
         clear_terminal()
@@ -208,7 +208,7 @@ def get_ticker(stub):
 #------------------------------------------------------------
 
 # Funzione per ottenere la media degli ultimi X giorni di un ticker
-def GetAvaragePriceOfXDays(stub):
+def GetAvaragePriceOfXDays(query_stub):
     if not is_authenticated:
         print("Devi effettuare il login o la registrazione prima di ottenere il ticker.")
         time.sleep(2)
@@ -219,7 +219,7 @@ def GetAvaragePriceOfXDays(stub):
     request = file_pb2.GetAvarageXDaysRequest(days=days, email=current_email)
 
     try:
-        response = stub.GetAvaragePriceOfXDays(request)
+        response = query_stub.GetAvaragePriceOfXDays(request)
         print(response.message)
         time.sleep(2)
         clear_terminal()
@@ -233,10 +233,11 @@ def GetAvaragePriceOfXDays(stub):
 def run():
     global is_authenticated
     channel = grpc.insecure_channel('localhost:50051')
-    stub = file_pb2_grpc.UserServiceStub(channel)
+    command_stub = file_pb2_grpc.CommandServiceStub(channel)
+    query_stub = file_pb2_grpc.QueryServiceStub(channel)
 
     # Verifica se il server è attivo prima di proseguire
-    if not ping_server(stub):
+    if not ping_server(query_stub):
         print("Il server non è disponibile. Uscita.")
         return
 
@@ -257,19 +258,19 @@ def run():
 
         if choice == '1':
             if is_authenticated:
-                update_user(stub)
+                update_user(command_stub)
             else:
-                login_user(stub)
+                login_user(query_stub)
         elif choice == '2':
             if is_authenticated:
-                delete_user(stub)
+                delete_user(command_stub)
                 is_authenticated = False
                 current_email = None
             else:
-                create_user(stub)
+                create_user(command_stub)
         elif choice == '3':
             if is_authenticated:
-                get_ticker(stub)
+                get_ticker(query_stub)
             else:
                 if is_authenticated:
                     print("Uscita...")
@@ -280,7 +281,7 @@ def run():
         elif choice == '2':
             print("Torna al login")
         elif choice == '4' and is_authenticated:
-            GetAvaragePriceOfXDays(stub)
+            GetAvaragePriceOfXDays(query_stub)
         elif choice == '5' and is_authenticated:
             is_authenticated = False
             current_email = None

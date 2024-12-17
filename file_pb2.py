@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nfile.proto\x12\x08greeting\"\x1e\n\x0bPingMessage\x12\x0f\n\x07message\x18\x01 \x01(\t\"/\n\x0cLoginRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"U\n\x0fRegisterRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x0e\n\x06ticker\x18\x03 \x01(\t\x12\x11\n\trequestID\x18\x04 \x01(\t\"?\n\x0bUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x0e\n\x06ticker\x18\x02 \x01(\t\x12\x11\n\trequestID\x18\x03 \x01(\t\"\"\n\x11\x44\x65leteUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\"\x1f\n\x0cUserResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"!\n\x10GetTickerRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\"5\n\x16GetAvarageXDaysRequest\x12\x0c\n\x04\x64\x61ys\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t2\xe4\x03\n\x0bUserService\x12\x36\n\x04Ping\x12\x15.greeting.PingMessage\x1a\x15.greeting.PingMessage\"\x00\x12=\n\tLoginUser\x12\x16.greeting.LoginRequest\x1a\x16.greeting.UserResponse\"\x00\x12\x41\n\nCreateUser\x12\x19.greeting.RegisterRequest\x1a\x16.greeting.UserResponse\"\x00\x12=\n\nUpdateUser\x12\x15.greeting.UserRequest\x1a\x16.greeting.UserResponse\"\x00\x12\x43\n\nDeleteUser\x12\x1b.greeting.DeleteUserRequest\x1a\x16.greeting.UserResponse\"\x00\x12\x41\n\tGetTicker\x12\x1a.greeting.GetTickerRequest\x1a\x16.greeting.UserResponse\"\x00\x12T\n\x16GetAvaragePriceOfXDays\x12 .greeting.GetAvarageXDaysRequest\x1a\x16.greeting.UserResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nfile.proto\x12\x08greeting\"\x1e\n\x0bPingMessage\x12\x0f\n\x07message\x18\x01 \x01(\t\"/\n\x0cLoginRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"U\n\x0fRegisterRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x0e\n\x06ticker\x18\x03 \x01(\t\x12\x11\n\trequestID\x18\x04 \x01(\t\"?\n\x0bUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x0e\n\x06ticker\x18\x02 \x01(\t\x12\x11\n\trequestID\x18\x03 \x01(\t\"\"\n\x11\x44\x65leteUserRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\"\x1f\n\x0cUserResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"!\n\x10GetTickerRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\"5\n\x16GetAvarageXDaysRequest\x12\x0c\n\x04\x64\x61ys\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t2\xd7\x01\n\x0e\x43ommandService\x12\x41\n\nCreateUser\x12\x19.greeting.RegisterRequest\x1a\x16.greeting.UserResponse\"\x00\x12=\n\nUpdateUser\x12\x15.greeting.UserRequest\x1a\x16.greeting.UserResponse\"\x00\x12\x43\n\nDeleteUser\x12\x1b.greeting.DeleteUserRequest\x1a\x16.greeting.UserResponse\"\x00\x32\x9e\x02\n\x0cQueryService\x12\x36\n\x04Ping\x12\x15.greeting.PingMessage\x1a\x15.greeting.PingMessage\"\x00\x12=\n\tLoginUser\x12\x16.greeting.LoginRequest\x1a\x16.greeting.UserResponse\"\x00\x12\x41\n\tGetTicker\x12\x1a.greeting.GetTickerRequest\x1a\x16.greeting.UserResponse\"\x00\x12T\n\x16GetAvaragePriceOfXDays\x12 .greeting.GetAvarageXDaysRequest\x1a\x16.greeting.UserResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -47,6 +47,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_GETTICKERREQUEST']._serialized_end=359
   _globals['_GETAVARAGEXDAYSREQUEST']._serialized_start=361
   _globals['_GETAVARAGEXDAYSREQUEST']._serialized_end=414
-  _globals['_USERSERVICE']._serialized_start=417
-  _globals['_USERSERVICE']._serialized_end=901
+  _globals['_COMMANDSERVICE']._serialized_start=417
+  _globals['_COMMANDSERVICE']._serialized_end=632
+  _globals['_QUERYSERVICE']._serialized_start=635
+  _globals['_QUERYSERVICE']._serialized_end=921
 # @@protoc_insertion_point(module_scope)

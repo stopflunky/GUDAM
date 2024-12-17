@@ -26,46 +26,13 @@ cache_lock = Lock()
 
 #------------------------------------------------------------
 
-# Implementazione del server gRPC
-class UserService(file_pb2_grpc.UserServiceServicer):
+# Implementazione del CommanServicer
+class CommandService(file_pb2_grpc.CommandServiceServicer):
     def __init__(self):
         self.conn = psycopg2.connect(**DATABASE_CONFIG)
         self.cursor = self.conn.cursor()
 
-#------------------------------------------------------------
-
-    def Ping(self, request, context):
-        # Risponde con "pong" quando riceve un "ping"
-        return file_pb2.PingMessage(message="pong")
-
-#------------------------------------------------------------
-
-# Funzione di login per verificare se l'utente esiste nel DB
-    def LoginUser(self, request, context):
-        try:
-            # Recupera l'utente dal database in base all'email
-            self.cursor.execute("SELECT email, password FROM users WHERE email = %s", (request.email,))
-            user = self.cursor.fetchone()
-
-            if user is None:
-                # Se l'utente non esiste, restituisci un messaggio di errore
-                return file_pb2.UserResponse(message="Errore: utente non trovato. Devi registrarti.")
-
-            # Recupera la password hashata dal database
-            db_email, db_password = user
-
-            # Confronta la password fornita con quella nel database
-            if request.password == db_password:
-                return file_pb2.UserResponse(message="Accesso riuscito!")
-            else:
-                return file_pb2.UserResponse(message="Errore: password errata.")
-
-        # Eccezione generica
-        except Exception as e:
-            return file_pb2.UserResponse(message=f"Errore durante il login: {str(e)}")
-
-#------------------------------------------------------------
-
+    # Funzione di creazione di un utente
     def CreateUser(self, request, context):
         # Controllo duplicati tramite cache
         with cache_lock:
@@ -107,8 +74,6 @@ class UserService(file_pb2_grpc.UserServiceServicer):
                 request_cache[request.requestID] = response
 
         return response
-
-#------------------------------------------------------------
 
     # Funzione di aggiornamento del ticker di un utente
     def UpdateUser(self, request, context):
@@ -153,7 +118,6 @@ class UserService(file_pb2_grpc.UserServiceServicer):
 
         return response
 
-#------------------------------------------------------------
 
     # Funzione di cancellazione di un utente
     def DeleteUser(self, request, context):         
@@ -171,8 +135,42 @@ class UserService(file_pb2_grpc.UserServiceServicer):
         except Exception as e:
             self.conn.rollback()
             return file_pb2.UserResponse(message=f"Errore durante l'eliminazione: {str(e)}")
-
+        
 #------------------------------------------------------------
+
+# Implementazione del QueryServicer
+class QueryService(file_pb2_grpc.QueryServiceServicer):
+    def __init__(self):
+        self.conn = psycopg2.connect(**DATABASE_CONFIG)
+        self.cursor = self.conn.cursor()
+
+    # Funzione di ping per verificare se il server è attivo
+    def Ping(self, request, context):
+        return file_pb2.PingMessage(message="pong")
+
+    # Funzione di login per verificare se l'utente esiste nel DB
+    def LoginUser(self, request, context):
+        try:
+            # Recupera l'utente dal database in base all'email
+            self.cursor.execute("SELECT email, password FROM users WHERE email = %s", (request.email,))
+            user = self.cursor.fetchone()
+
+            if user is None:
+                # Se l'utente non esiste, restituisci un messaggio di errore
+                return file_pb2.UserResponse(message="Errore: utente non trovato. Devi registrarti.")
+
+            # Recupera la password hashata dal database
+            db_email, db_password = user
+
+            # Confronta la password fornita con quella nel database
+            if request.password == db_password:
+                return file_pb2.UserResponse(message="Accesso riuscito!")
+            else:
+                return file_pb2.UserResponse(message="Errore: password errata.")
+
+        # Eccezione generica
+        except Exception as e:
+            return file_pb2.UserResponse(message=f"Errore durante il login: {str(e)}")
 
     # Funzione per ottenere il ticker di un utente
     def GetTicker(self, request, context):
@@ -198,8 +196,6 @@ class UserService(file_pb2_grpc.UserServiceServicer):
         # Gestione delle eccezioni
         except Exception as e:
             return file_pb2.UserResponse(message=f"Errore durante la ricerca del valore del titolo: {str(e)}")
-
-#------------------------------------------------------------
 
     # Funzione per ottenere la media degli ultimi X giorni di un ticker
     def GetAvaragePriceOfXDays(self, request, contest):
@@ -232,7 +228,8 @@ class UserService(file_pb2_grpc.UserServiceServicer):
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    file_pb2_grpc.add_UserServiceServicer_to_server(UserService(), server)
+    file_pb2_grpc.add_CommandServiceServicer_to_server(CommandService(), server)
+    file_pb2_grpc.add_QueryServiceServicer_to_server(QueryService(), server)
     server.add_insecure_port('[::]:50051')
     print("Server gRPC in esecuzione sulla porta 50051...")
     server.start()

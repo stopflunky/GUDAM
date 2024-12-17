@@ -16,7 +16,58 @@ DATABASE_CONFIG = {
 
 #----------------------------------------
 
-# Funzione per recuperare i dati di un ticker
+# Funzione Query: recupera i ticker, da aggiornare, dal DB
+def query_tickers():
+
+    tickers = []
+
+    try:
+        conn = psycopg2.connect(**DATABASE_CONFIG)
+        cursor = conn.cursor()
+
+        # Query per recuperare i ticker
+        query = f"SELECT ticker_name FROM tickers;"
+        cursor.execute(query)
+
+        # Recupera tutti i risultati
+        rows = cursor.fetchall()
+
+        # Inserisce ogni ticker nella lista
+        for row in rows:
+            tickers.append(row[0])  # row[0] contiene il valore del ticker
+
+        # Chiude il cursore e la connessione
+        cursor.close()
+        conn.close()
+
+    except Exception as e:
+        print(f"Errore durante l'accesso al database: {e}")
+
+    return tickers
+
+# Funzione Command: aggiorna il valore di un ticker nel DB
+def command_update_ticker_value(ticker, last_value):
+
+    try:
+        conn = psycopg2.connect(**DATABASE_CONFIG)
+        cursor = conn.cursor()
+
+        last_value = float(last_value)
+        query = "UPDATE tickers SET last_price = %s WHERE ticker_name = %s;"
+        cursor.execute(query, (last_value, ticker,))
+
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+    except Exception as e:
+        print(f"Errore durante l'accesso al database: {e}")
+        raise
+
+#----------------------------------------
+
+# Funzione per recuperare i dati di un ticker da yfinance
 def get_stock_data(ticker):
 
     try:
@@ -35,59 +86,6 @@ def get_stock_data(ticker):
 
 #----------------------------------------
 
-# Funzione per recuperare i ticker dal database
-def get_tickers():
-
-    tickers = []
-
-    try:
-        conn = psycopg2.connect(**DATABASE_CONFIG)
-        cursor = conn.cursor()
-
-        # Query per recuperare i ticker
-        query = f"SELECT ticker_name FROM tickers;"
-        cursor.execute(query)
-
-        # Recupera tutti i risultati
-        rows = cursor.fetchall()
-
-        # Inserisce ogni ticker nella pila
-        for row in rows:
-            tickers.append(row[0])  # row[0] contiene il valore del ticker
-
-        # Chiude il cursore e la connessione
-        cursor.close()
-        conn.close()
-
-    except Exception as e:
-        print(f"Errore durante l'accesso al database: {e}")
-
-    return tickers
-
-#----------------------------------------
-
-# Funzione per aggiornare il valore di un ticker
-def update_ticker_value(ticker, last_value):
-
-    try:
-        conn = psycopg2.connect(**DATABASE_CONFIG)
-        cursor = conn.cursor()
-
-        query = "UPDATE tickers SET last_price = %s WHERE ticker_name = %s;"
-        cursor.execute(query, (last_value, ticker,))
-
-        conn.commit()
-
-        cursor.close()
-        conn.close()
-
-
-    except Exception as e:
-        print(f"Errore durante l'accesso al database: {e}")
-        raise
-
-#----------------------------------------
-
 # Funzione principale
 def main():
 
@@ -97,14 +95,14 @@ def main():
 
     while True:
 
-        tickers = get_tickers()
+        tickers = query_tickers()
 
         for ticker in tickers:
             try:
                 last_value = get_data_circuit_breaker.call(lambda: get_stock_data(ticker))
                 if last_value:
                     try:
-                        update_data_circuit_breaker.call(lambda: update_ticker_value(ticker, last_value))
+                        update_data_circuit_breaker.call(lambda: command_update_ticker_value(ticker, last_value))
 
                     except CircuitBreakerOpenException:
                         print(f"Circuito aperto durante l'aggiornamento del ticker {ticker}")

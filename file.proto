@@ -2,13 +2,17 @@ syntax = "proto3";
 
 package greeting;
 
-service UserService
+service CommandService
 {
-  rpc Ping(PingMessage) returns (PingMessage) {}
-  rpc LoginUser(LoginRequest) returns (UserResponse) {}
   rpc CreateUser(RegisterRequest) returns (UserResponse) {}
   rpc UpdateUser(UserRequest) returns (UserResponse) {}
   rpc DeleteUser(DeleteUserRequest) returns (UserResponse) {}
+}
+
+service QueryService
+{
+  rpc Ping(PingMessage) returns (PingMessage) {}
+  rpc LoginUser(LoginRequest) returns (UserResponse) {}
   rpc GetTicker(GetTickerRequest) returns (UserResponse) {}
   rpc GetAvaragePriceOfXDays(GetAvarageXDaysRequest) returns (UserResponse){}
 }
