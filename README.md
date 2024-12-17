@@ -55,7 +55,7 @@ Run
 `docker-compose up`
 
 After that you can test your server.
-you need to run the client.py file in the GUDAm directory
+you need to run the client.py file in the GUDAM directory
 
 By typing in your terminal (if you have Windows): `python client.py`
 
