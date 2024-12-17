@@ -7,6 +7,7 @@ service CommandService
   rpc CreateUser(RegisterRequest) returns (UserResponse) {}
   rpc UpdateUser(UserRequest) returns (UserResponse) {}
   rpc DeleteUser(DeleteUserRequest) returns (UserResponse) {}
+  rpc UpdateHighLow(ModifyLowHighRequest) returns (UserResponse) {}
 }
 
 service QueryService
@@ -34,6 +35,8 @@ message RegisterRequest
   string password = 2;
   string ticker = 3;
   string requestID = 4;
+  string lowValue = 5;
+  string highValue = 6;
 }
 
 message UserRequest
@@ -62,4 +65,12 @@ message GetAvarageXDaysRequest
 {
   string days = 1;
   string email = 2;
+}
+
+message ModifyLowHighRequest
+{
+  string email = 1;
+  string requestID = 2;
+  string lowValue = 3;
+  string highValue = 4;
 }

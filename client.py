@@ -93,7 +93,33 @@ def create_user(command_stub):
     hashed_password = hash_password(password)
     ticker = input("Inserisci il ticker dell'utente: ")
     request_id = str(uuid.uuid4())
-    request = file_pb2.RegisterRequest(email=email, password=hashed_password, ticker=ticker, requestID=request_id)
+
+
+    lowValue = input("Inserisci il valore minimo (per allerta) del ticker: ")
+    highValue = input("Inserisci il valore massimo (per allerta) del ticker: ")
+
+    if lowValue == None and highValue == None:
+        pass
+
+    while True:
+        
+        if lowValue == None and highValue == None:
+            
+            print("Non hai inserito i valori per l'allerta del ticker")
+
+        elif lowValue > highValue:
+            print("Il valore minimo non può essere maggiore di quello massimo\n")
+            
+
+        else:
+            break
+
+        lowValue = input("Inserisci il valore minimo (per allerta) del ticker: ")
+        highValue = input("Inserisci il valore massimo (per allerta) del ticker: ")
+
+
+
+    request = file_pb2.RegisterRequest(email=email, password=hashed_password, ticker=ticker, requestID=request_id, lowValue=lowValue, highValue=highValue)
 
     retries = 0
     while retries < MAX_RETRIES:
@@ -122,6 +148,66 @@ def create_user(command_stub):
                 time.sleep(2)
                 clear_terminal()
                 break
+
+#------------------------------------------------------------
+
+# Funzione per modificare i valori di low-value e high-value relativi al ticker
+
+def modify_ticker_values(command_stub):
+
+    if not is_authenticated:
+        print("Devi effettuare il login o la registrazione prima di effetuare la modifica.")
+        time.sleep(2)
+        clear_terminal()
+        return
+
+
+
+
+    lowValue = input("Inserisci il valore minimo (per allerta) del ticker: ")
+    highValue = input("Inserisci il valore massimo (per allerta) del ticker: ")
+
+    if lowValue == None and highValue == None:
+        pass
+
+    while True:
+        
+        if lowValue == None and highValue == None:
+            
+            print("Non hai inserito i valori per l'allerta del ticker")
+
+        elif lowValue > highValue:
+            print("Il valore minimo non può essere maggiore di quello massimo\n")
+            
+
+        else:
+            break
+
+        lowValue = input("Inserisci il valore minimo (per allerta) del ticker: ")
+        highValue = input("Inserisci il valore massimo (per allerta) del ticker: ")
+
+    
+
+    request_id = str(uuid.uuid4())
+
+    
+
+    request = file_pb2.ModifyLowHighRequest(email=current_email, requestID=request_id, lowValue=lowValue, highValue=highValue)
+
+    try:
+        response = command_stub.UpdateUser(request, timeout=TIMEOUT)
+        print(response.message)
+        time.sleep(2)
+        clear_terminal()
+        return
+
+    except RpcError as e:
+        
+        print(f"Errore RPC: {e.code()} - {e.details()}")
+        time.sleep(2)
+        clear_terminal()
+
+
 
 #------------------------------------------------------------
 
@@ -245,10 +331,11 @@ def run():
     while True:
         if is_authenticated:
             print("\n1. Aggiorna ticker utente")
-            print("2. Elimina utente")
-            print("3. Ottieni ticker utente")
-            print("4. Ottieni la media degli ultimi X valori del ticker: ")
-            print("5. Esci (torna al login)")
+            print("2. Modifica lowValue e highValue del ticker")
+            print("3. Elimina utente")
+            print("4. Ottieni ticker utente")
+            print("5. Ottieni la media degli ultimi X valori del ticker: ")
+            print("6. Esci (torna al login)")
         else:
             print("\n1. Login utente")
             print("2. Crea nuovo utente")
@@ -261,14 +348,18 @@ def run():
                 update_user(command_stub)
             else:
                 login_user(query_stub)
-        elif choice == '2':
+
+        elif choice == '2': 
+            if is_authenticated:
+                modify_ticker_values(command_stub)
+        elif choice == '3':
             if is_authenticated:
                 delete_user(command_stub)
                 is_authenticated = False
                 current_email = None
             else:
                 create_user(command_stub)
-        elif choice == '3':
+        elif choice == '4':
             if is_authenticated:
                 get_ticker(query_stub)
             else:
@@ -280,9 +371,9 @@ def run():
                     break
         elif choice == '2':
             print("Torna al login")
-        elif choice == '4' and is_authenticated:
-            GetAvaragePriceOfXDays(query_stub)
         elif choice == '5' and is_authenticated:
+            GetAvaragePriceOfXDays(query_stub)
+        elif choice == '6' and is_authenticated:
             is_authenticated = False
             current_email = None
             print("Sei stato disconnesso. Torna al login.")

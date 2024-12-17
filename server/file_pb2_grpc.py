@@ -5,7 +5,7 @@ import warnings
 
 import file_pb2 as file__pb2
 
-GRPC_GENERATED_VERSION = '1.68.0'
+GRPC_GENERATED_VERSION = '1.67.1'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -49,6 +49,11 @@ class CommandServiceStub(object):
                 request_serializer=file__pb2.DeleteUserRequest.SerializeToString,
                 response_deserializer=file__pb2.UserResponse.FromString,
                 _registered_method=True)
+        self.UpdateHighLow = channel.unary_unary(
+                '/greeting.CommandService/UpdateHighLow',
+                request_serializer=file__pb2.ModifyLowHighRequest.SerializeToString,
+                response_deserializer=file__pb2.UserResponse.FromString,
+                _registered_method=True)
 
 
 class CommandServiceServicer(object):
@@ -72,6 +77,12 @@ class CommandServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def UpdateHighLow(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_CommandServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -88,6 +99,11 @@ def add_CommandServiceServicer_to_server(servicer, server):
             'DeleteUser': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteUser,
                     request_deserializer=file__pb2.DeleteUserRequest.FromString,
+                    response_serializer=file__pb2.UserResponse.SerializeToString,
+            ),
+            'UpdateHighLow': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateHighLow,
+                    request_deserializer=file__pb2.ModifyLowHighRequest.FromString,
                     response_serializer=file__pb2.UserResponse.SerializeToString,
             ),
     }
@@ -171,6 +187,33 @@ class CommandService(object):
             target,
             '/greeting.CommandService/DeleteUser',
             file__pb2.DeleteUserRequest.SerializeToString,
+            file__pb2.UserResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateHighLow(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/greeting.CommandService/UpdateHighLow',
+            file__pb2.ModifyLowHighRequest.SerializeToString,
             file__pb2.UserResponse.FromString,
             options,
             channel_credentials,

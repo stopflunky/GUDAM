@@ -55,7 +55,7 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
 
             # Inserisci i dati utili nel DB
             self.cursor.execute("INSERT INTO tickers (ticker_name, last_price) VALUES (%s, %s) ON CONFLICT (ticker_name) DO UPDATE SET last_price = EXCLUDED.last_price;", (request.ticker, last_price))
-            self.cursor.execute("INSERT INTO users (email, password, ticker) VALUES (%s, %s, %s);", (request.email, request.password, request.ticker))
+            self.cursor.execute("INSERT INTO users (email, password, ticker, low_value, high_value) VALUES (%s, %s, %s, %s, %s);", (request.email, request.password, request.ticker, request.lowValue, request.highValue))
             self.conn.commit()
 
             response = file_pb2.UserResponse(message="Successo")
