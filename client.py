@@ -200,7 +200,7 @@ def modify_ticker_values(command_stub):
     request = file_pb2.ModifyLowHighRequest(email=current_email, requestID=request_id, lowValue=lowValue, highValue=highValue)
 
     try:
-        response = command_stub.UpdateUser(request, timeout=TIMEOUT)
+        response = command_stub.UpdateHighLow(request, timeout=TIMEOUT)
         print(response.message)
         time.sleep(2)
         clear_terminal()
