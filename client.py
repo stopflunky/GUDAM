@@ -92,6 +92,11 @@ def create_user(command_stub):
     password = input("Inserisci la password: ")
     hashed_password = hash_password(password)
     ticker = input("Inserisci il ticker dell'utente: ")
+    if(ticker == ""):
+        print("Devi inserire un ticker.")
+        time.sleep(2)
+        clear_terminal()
+        return
     request_id = str(uuid.uuid4())
 
 
@@ -110,14 +115,11 @@ def create_user(command_stub):
         elif lowValue > highValue:
             print("Il valore minimo non può essere maggiore di quello massimo.\n")
             
-
         else:
             break
 
         lowValue = input("Inserisci il valore minimo (per allerta) del ticker: ")
         highValue = input("Inserisci il valore massimo (per allerta) del ticker: ")
-
-
 
     request = file_pb2.RegisterRequest(email=email, password=hashed_password, ticker=ticker, requestID=request_id, lowValue=lowValue, highValue=highValue)
 
