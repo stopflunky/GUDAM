@@ -105,10 +105,10 @@ def create_user(command_stub):
         
         if lowValue == None and highValue == None:
             
-            print("Non hai inserito i valori per l'allerta del ticker")
+            print("Devi inserire i valori per l'allerta del ticker.")
 
         elif lowValue > highValue:
-            print("Il valore minimo non può essere maggiore di quello massimo\n")
+            print("Il valore minimo non può essere maggiore di quello massimo.\n")
             
 
         else:
@@ -162,8 +162,6 @@ def modify_ticker_values(command_stub):
         return
 
 
-
-
     lowValue = input("Inserisci il valore minimo (per allerta) del ticker: ")
     highValue = input("Inserisci il valore massimo (per allerta) del ticker: ")
 
@@ -174,10 +172,10 @@ def modify_ticker_values(command_stub):
         
         if lowValue == None and highValue == None:
             
-            print("Non hai inserito i valori per l'allerta del ticker")
+            print("Devi inserire i valori per l'allerta del ticker.")
 
         elif lowValue > highValue:
-            print("Il valore minimo non può essere maggiore di quello massimo\n")
+            print("Il valore minimo non può essere maggiore di quello massimo.\n")
             
 
         else:
@@ -206,8 +204,6 @@ def modify_ticker_values(command_stub):
         print(f"Errore RPC: {e.code()} - {e.details()}")
         time.sleep(2)
         clear_terminal()
-
-
 
 #------------------------------------------------------------
 
@@ -329,61 +325,59 @@ def run():
 
     # Menu principale
     while True:
+        clear_terminal()
         if is_authenticated:
-            print("\n1. Aggiorna ticker utente")
+            print("\n--- Menu Utente Autenticato ---")
+            print("1. Aggiorna ticker utente")
             print("2. Modifica lowValue e highValue del ticker")
             print("3. Elimina utente")
             print("4. Ottieni ticker utente")
-            print("5. Ottieni la media degli ultimi X valori del ticker: ")
+            print("5. Ottieni la media degli ultimi X valori del ticker")
             print("6. Esci (torna al login)")
         else:
-            print("\n1. Login utente")
+            print("\n--- Menu Principale ---")
+            print("1. Login utente")
             print("2. Crea nuovo utente")
             print("3. Esci (chiudi il programma)")
 
-        choice = input("Scegli un'opzione: ")
+        choice = input("Scegli un'opzione: ").strip()
 
-        if choice == '1':
-            if is_authenticated:
+        # Scelte per utente autenticato
+        if is_authenticated:
+            if choice == '1':
                 update_user(command_stub)
-            else:
-                login_user(query_stub)
-
-        elif choice == '2': 
-            if is_authenticated:
+            elif choice == '2':
                 modify_ticker_values(command_stub)
-        elif choice == '3':
-            if is_authenticated:
+            elif choice == '3':
                 delete_user(command_stub)
                 is_authenticated = False
                 current_email = None
-            else:
-                create_user(command_stub)
-        elif choice == '4':
-            if is_authenticated:
+            elif choice == '4':
                 get_ticker(query_stub)
+            elif choice == '5':
+                GetAvaragePriceOfXDays(query_stub)
+            elif choice == '6':
+                is_authenticated = False
+                current_email = None
+                print("Sei stato disconnesso. Torna al login.")
+                time.sleep(1)
+                clear_terminal()
             else:
-                if is_authenticated:
-                    print("Uscita...")
-                    break
-                else:
-                    print("Uscita dal programma...")
-                    break
-        elif choice == '2':
-            print("Torna al login")
-        elif choice == '5' and is_authenticated:
-            GetAvaragePriceOfXDays(query_stub)
-        elif choice == '6' and is_authenticated:
-            is_authenticated = False
-            current_email = None
-            print("Sei stato disconnesso. Torna al login.")
-            time.sleep(1)
-            clear_terminal()
-        elif choice == '3' and not is_authenticated:
-            print("Uscita dal programma...")
-            break
+                print("Opzione non valida. Riprova.")
+                time.sleep(2)
+
+        # Scelte per utente non autenticato
         else:
-            print("Opzione non valida.")
+            if choice == '1':
+                login_user(query_stub)
+            elif choice == '2':
+                create_user(command_stub)
+            elif choice == '3':
+                print("Uscita dal programma...")
+                break
+            else:
+                print("Opzione non valida. Riprova.")
+                time.sleep(2)
 
 if __name__ == "__main__":
     run()
