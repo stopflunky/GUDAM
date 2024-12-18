@@ -117,6 +117,48 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
                 request_cache[request.requestID] = response
 
         return response
+    
+     # Funzione di aggiornamento dei valori di basso e alto di un utente
+    def UpdateHighLow(self, request, context):
+
+        with cache_lock:
+            if request.requestID in request_cache:
+                print(f"[CACHE HIT] La richiesta con ID {request.requestID} è già stata processata.")
+                return request_cache[request.requestID]
+        
+
+        try:
+
+            self.cursor.execute("BEGIN")
+
+            # Verifica se l'utente esiste nel database
+            self.cursor.execute("SELECT * FROM users WHERE email = %s", (request.email,))
+            user = self.cursor.fetchone()
+
+            if user is None:
+                response = file_pb2.UserResponse(message="Errore: utente non trovato.")
+            else:
+
+                self.cursor.execute("UPDATE users SET low_value = %s, high_value = %s WHERE email = %s", (request.lowValue, request.highValue, request.email))
+                self.conn.commit()
+
+
+                response = file_pb2.UserResponse(message="Valori aggiornato con successo")
+        
+        # Gestione delle eccezioni
+        except psycopg2.IntegrityError as e:
+            self.conn.rollback()
+            response = file_pb2.UserResponse(message="Errore di integrità: impossibile aggiornare il ticker.")
+        except Exception as e:
+            self.conn.rollback()
+            response = file_pb2.UserResponse(message=f"Errore durante l'aggiornamento: {str(e)}")
+        finally:
+            # Memorizza nella cache il risultato della richiesta
+            with cache_lock:
+                request_cache[request.requestID] = response
+
+        return response
+        
 
 
     # Funzione di cancellazione di un utente

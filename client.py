@@ -107,8 +107,11 @@ def create_user(command_stub):
             
             print("Devi inserire i valori per l'allerta del ticker.")
 
-        elif lowValue > highValue:
-            print("Il valore minimo non può essere maggiore di quello massimo.\n")
+        elif lowValue and highValue:
+            if float(lowValue) > float(highValue):
+                print("Il valore minimo non può essere maggiore di quello massimo.\n")
+            else:
+                break
             
 
         else:
@@ -174,10 +177,12 @@ def modify_ticker_values(command_stub):
             
             print("Devi inserire i valori per l'allerta del ticker.")
 
-        elif lowValue > highValue:
-            print("Il valore minimo non può essere maggiore di quello massimo.\n")
+        elif lowValue and highValue:
+            if float(lowValue) > float(highValue):
+                print("Il valore minimo non può essere maggiore di quello massimo.\n")
+            else:
+                break
             
-
         else:
             break
 
