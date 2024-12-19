@@ -1,7 +1,9 @@
 import time
+import json
 import psycopg2
 import yfinance as yf
 from circuit_breaker import CircuitBreaker, CircuitBreakerOpenException
+from confluent_kafka import Producer
 
 #----------------------------------------
 
@@ -13,6 +15,31 @@ DATABASE_CONFIG = {
     "host": "db",
     "port": "5432"
 }
+
+#----------------------------------------
+
+producer_config = {
+    'bootstrap.servers': 'kafka-broker:9092',  # List of Kafka brokers
+    'acks': 'all',  # Ensure all in-sync replicas acknowledge the message
+    'max.in.flight.requests.per.connection': 1,  # Ensure ordering of messages
+    'batch.size': 500,  # Maximum size of a batch in bytes
+    'retries': 3  # Number of retries for failed messages
+}
+
+producer = Producer(producer_config)
+topic = 'to-alert-system'
+message = {"message": "Stock data has been updated!"}
+
+def delivery_report(err, msg):
+    """
+    Callback to report the result of message delivery.
+    :param err: Error during delivery (None if successful).
+    :param msg: The message metadata.
+    """
+    if err:
+        print(f"Message delivery failed: {err}")
+    else:
+        print(f"Message delivered to topic '{msg.topic()}', partition {msg.partition()}, offset {msg.offset()}.")
 
 #----------------------------------------
 
@@ -103,6 +130,8 @@ def main():
                 if last_value:
                     try:
                         update_data_circuit_breaker.call(lambda: command_update_ticker_value(ticker, last_value))
+                        producer.produce(topic, json.dumps(message), callback = delivery_report)
+                        producer.flush()
 
                     except CircuitBreakerOpenException:
                         print(f"Circuito aperto durante l'aggiornamento del ticker {ticker}")
