@@ -28,14 +28,8 @@ producer_config = {
 
 producer = Producer(producer_config)
 topic = 'to-alert-system'
-message = {"message": "Stock data has been updated!"}
 
 def delivery_report(err, msg):
-    """
-    Callback to report the result of message delivery.
-    :param err: Error during delivery (None if successful).
-    :param msg: The message metadata.
-    """
     if err:
         print(f"Message delivery failed: {err}")
     else:
@@ -130,6 +124,7 @@ def main():
                 if last_value:
                     try:
                         update_data_circuit_breaker.call(lambda: command_update_ticker_value(ticker, last_value))
+                        message = {"message": f"Ticker {ticker} aggiornato a {last_value}!"}
                         producer.produce(topic, json.dumps(message), callback = delivery_report)
                         producer.flush()
 

@@ -3,34 +3,28 @@ import json
 
 # Configurazione del consumer
 consumer_config = {
-    'bootstrap.servers': 'localhost:29092',  # Lista di broker Kafka
-    'group.id': 'alert-system-group',          # Identificatore del gruppo consumer
-    'auto.offset.reset': 'earliest'            # Imposta la lettura dei messaggi dal primo messaggio disponibile se non ci sono offset salvati
+    'bootstrap.servers': 'localhost:29092',
+    'group.id': 'alert-system-group',       
+    'auto.offset.reset': 'earliest'       
 }
 
-# Crea il consumer
 consumer = Consumer(consumer_config)
-
-topic = 'to-alert-system'  # Nome del topic da cui il consumer leggerà i messaggi
+topic = 'to-alert-system' 
 
 def delivery_report(err, msg):
-    """
-    Callback per la consegna dei messaggi. Può essere utilizzata anche nel consumer
-    per segnalare se ci sono errori durante la lettura dei messaggi.
-    """
     if err:
         print(f"Errore nella lettura del messaggio: {err}")
     else:
         print(f"Messaggio ricevuto dal topic '{msg.topic()}', partizione {msg.partition()}, offset {msg.offset()}.")
 
+# Funzione per consumare i messaggi dal topic
 def consume_messages():
-    # Iscriviti al topic
     consumer.subscribe([topic])
 
     try:
         while True:
             # Consuma un messaggio
-            msg = consumer.poll(timeout=1.0)  # Tempo di attesa per il messaggio in secondi
+            msg = consumer.poll(timeout=1.0)
 
             if msg is None:
                 # Nessun messaggio disponibile nel tempo specificato
@@ -47,14 +41,23 @@ def consume_messages():
                 try:
                     message = json.loads(msg.value().decode('utf-8'))
                     print("Contenuto del messaggio:", message)
-                    # Puoi aggiungere qui il codice per elaborare il messaggio
+                    
+                    # Estrai il ticker e last_value dal messaggio
+                    ticker = message.get('ticker')
+                    last_value = message.get('last_value')
+                    
+                    # Verifica se i valori sono presenti e successivamente esegui operazioni future
+                    if ticker and last_value:
+                        print(f"Ticker: {ticker}, Last Value: {last_value}")
+                        # Puoi aggiungere qui il codice per ulteriori operazioni, ad esempio:
+                        # Esegui operazioni basate su ticker e last_value
+                        # Ad esempio, salvataggio su database, invio di alert, etc.
                 except json.JSONDecodeError:
                     print("Errore nel parsing del messaggio JSON.")
 
     except KeyboardInterrupt:
         print("Interruzione del consumer.")
     finally:
-        # Assicurati di chiudere il consumer quando finito
         consumer.close()
 
 # Funzione principale per avviare il consumer
