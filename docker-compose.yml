@@ -34,23 +34,6 @@ services:
     ports:
       - "50051:50051"
 
-  # Data Collector
-  datacollector:
-    build:
-      context: ./data_collector
-    container_name: datacollector
-    restart: always
-    depends_on:
-      - db
-      - kafka-broker
-    environment:
-      DATABASE_HOST: db
-      DATABASE_PORT: 5432
-      DATABASE_USER: postgres
-      DATABASE_PASSWORD: Danilo2001
-      DATABASE_NAME: Homework
-      KAFKA_BROKER: kafka-broker:9092  # Assicurati di utilizzare il nome del servizio Kafka per la connessione
-
   # Zookeeper
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -75,13 +58,29 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker:9092,PLAINTEXT_INTERNAL://localhost:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    
     restart: always
 
-
-
+  # Data Collector
+  datacollector:
+    build:
+      context: ./data_collector
+    container_name: datacollector
+    restart: always
+    depends_on:
+      - db
+      - kafka-broker
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: Danilo2001
+      DATABASE_NAME: Homework
+      KAFKA_BROKER: kafka-broker:9092
+      
+  # Alert System
   alert_system:
     build: ./alert_system
+    restart: always
     environment:
       - DATABASE_HOST=db
       - DATABASE_USER=postgres
@@ -91,10 +90,21 @@ services:
     depends_on:
       - db
       - kafka-broker
+
+  # Alert Notifier System
+  alert_notifier_system:
+    build: ./alert_notifier_system
     restart: always
-
-
-
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=Danilo2001
+      - DATABASE_NAME=Homework
+      - KAFKA_BROKER=kafka-broker:9092
+    depends_on:
+      - db
+      - kafka-broker
+      - alert_system
 
 volumes:
   db_data:

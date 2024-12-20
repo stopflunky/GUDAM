@@ -1,7 +1,17 @@
-from confluent_kafka import Consumer, KafkaException, KafkaError
+from confluent_kafka import Consumer, Producer, KafkaException, KafkaError
+from email.mime.text import MIMEText
+import psycopg2
 import json
 import smtplib
-from email.mime.text import MIMEText
+
+# Configurazione del database PostgreSQL
+db_config = {
+    "dbname": "Homework",
+    "user": "postgres",
+    "password": "Danilo2001",
+    "host": "db",
+    "port": "5432"
+}
 
 # Configurazione del consumer
 consumer_config = {
@@ -10,35 +20,77 @@ consumer_config = {
     'auto.offset.reset': 'earliest'       
 }
 
-consumer = Consumer(consumer_config)
-topic = 'to-alert-system' 
+# Configurazione del producer
+producer_config = {
+    'bootstrap.servers': 'kafka-broker:9092',
+    'acks': 'all',  
+    'max.in.flight.requests.per.connection': 1,  
+    'batch.size': 500,  
+    'retries': 3
+}
 
+consumer = Consumer(consumer_config)
+producer = Producer(producer_config)
+topic1 = 'to-alert-system' 
+topic2 = 'to-notifier'
+
+# Funzione di report per la consegna del messaggio
 def delivery_report(err, msg):
     if err:
         print(f"Errore nella lettura del messaggio: {err}")
     else:
         print(f"Messaggio ricevuto dal topic '{msg.topic()}', partizione {msg.partition()}, offset {msg.offset()}.")
 
+# Funzione per verificare le soglie e inviare notifiche
+def check_thresholds_and_notify(ticker, last_value):
+    try:
+        # Connessione al database
+        conn = psycopg2.connect(**db_config)
+        cursor = conn.cursor()
+        
+        # Query per verificare i valori high_value e low_value per il ticker specificato
+        cursor.execute("SELECT email, low_value, high_value FROM users WHERE ticker = %s", (ticker,))
+        rows = cursor.fetchall()
+
+        for row in rows:
+            email, high_value, low_value = row
+            if high_value:
+                high_value = float(high_value)
+            if low_value:
+                low_value = float(low_value)
+            condition = None
+
+            # Verifica delle condizioni di soglia
+            if high_value is not None and last_value > high_value:
+                condition = 'sopra la soglia'
+            elif low_value is not None and last_value < low_value:
+                condition = 'sotto la soglia'
+
+            if condition:
+                # Crea il messaggio di notifica
+                notification = {
+                    'email': email,
+                    'ticker': ticker,
+                    'condition': condition
+                }
+
+                # Invia il messaggio al topic Kafka to-notifier
+                producer.produce(
+                    topic2,
+                    value=json.dumps(notification),
+                    callback=delivery_report
+                )
+                producer.flush()
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Errore durante la verifica delle soglie: {e}")
+
 # Funzione per consumare i messaggi dal topic
 def consume_messages():
-
-
-    smtp_server = 'smtp.gmail.com'
-    smtp_port = 587  # Porta per TLS
-    sender_email = "sdapallino@gmail.com"  # Inserisci il tuo indirizzo email
-    password = "7A&U2iOtIppzYVb"  # Inserisci la tua password
-
-
-    # Creazione dell'oggetto messaggio
-    receiver_email = "russo.t.o.d@gmail.com"  # Inserisci l'email del destinatario
-    message = MIMEText("This is a plain text email sent from a Python script.")
-    message['Subject'] = 'Plain Text Email from Python'
-    message['From'] = sender_email
-    message['To'] = receiver_email
-
-
-    consumer.subscribe([topic])
-
+    consumer.subscribe([topic1])
     try:
         while True:
             # Consuma un messaggio
@@ -58,24 +110,14 @@ def consume_messages():
                 print(f"Messaggio ricevuto: {msg.value().decode('utf-8')}")
                 try:
                     message = json.loads(msg.value().decode('utf-8'))
-                    print("Contenuto del messaggio:", message)
-
-                    with smtplib.SMTP(smtp_server, smtp_port) as server:
-                        server.starttls()  # Avvia la connessione TLS
-                        server.login(sender_email, password)
-                        server.send_message(message)  # send_message è un metodo conveniente quando si usa MIMEText
-                        print("Email sent successfully!")
+                    print("Contenuto del messaggio:", message.get('message'))
                     
                     # Estrai il ticker e last_value dal messaggio
                     ticker = message.get('ticker')
                     last_value = message.get('last_value')
+                    print(f"Controllo le soglie...")
+                    check_thresholds_and_notify(ticker, last_value)
                     
-                    # Verifica se i valori sono presenti e successivamente esegui operazioni future
-                    if ticker and last_value:
-                        print(f"Ticker: {ticker}, Last Value: {last_value}")
-                        # Puoi aggiungere qui il codice per ulteriori operazioni, ad esempio:
-                        # Esegui operazioni basate su ticker e last_value
-                        # Ad esempio, salvataggio su database, invio di alert, etc.
                 except json.JSONDecodeError:
                     print("Errore nel parsing del messaggio JSON.")
 

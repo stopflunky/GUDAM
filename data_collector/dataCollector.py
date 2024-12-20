@@ -124,7 +124,9 @@ def main():
                 if last_value:
                     try:
                         update_data_circuit_breaker.call(lambda: command_update_ticker_value(ticker, last_value))
-                        message = {"message": f"Ticker {ticker} aggiornato a {last_value}!"}
+                        message = {"message": f"Ticker {ticker} aggiornato a {last_value}!",
+                                   "ticker": ticker,
+                                   "last_value": last_value}
                         producer.produce(topic, json.dumps(message), callback = delivery_report)
                         producer.flush()
 
