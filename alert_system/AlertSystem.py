@@ -1,5 +1,7 @@
 from confluent_kafka import Consumer, KafkaException, KafkaError
 import json
+import smtplib
+from email.mime.text import MIMEText
 
 # Configurazione del consumer
 consumer_config = {
@@ -19,6 +21,22 @@ def delivery_report(err, msg):
 
 # Funzione per consumare i messaggi dal topic
 def consume_messages():
+
+
+    smtp_server = 'smtp.gmail.com'
+    smtp_port = 587  # Porta per TLS
+    sender_email = "sdapallino@gmail.com"  # Inserisci il tuo indirizzo email
+    password = "7A&U2iOtIppzYVb"  # Inserisci la tua password
+
+
+    # Creazione dell'oggetto messaggio
+    receiver_email = "russo.t.o.d@gmail.com"  # Inserisci l'email del destinatario
+    message = MIMEText("This is a plain text email sent from a Python script.")
+    message['Subject'] = 'Plain Text Email from Python'
+    message['From'] = sender_email
+    message['To'] = receiver_email
+
+
     consumer.subscribe([topic])
 
     try:
@@ -41,6 +59,12 @@ def consume_messages():
                 try:
                     message = json.loads(msg.value().decode('utf-8'))
                     print("Contenuto del messaggio:", message)
+
+                    with smtplib.SMTP(smtp_server, smtp_port) as server:
+                        server.starttls()  # Avvia la connessione TLS
+                        server.login(sender_email, password)
+                        server.send_message(message)  # send_message è un metodo conveniente quando si usa MIMEText
+                        print("Email sent successfully!")
                     
                     # Estrai il ticker e last_value dal messaggio
                     ticker = message.get('ticker')
