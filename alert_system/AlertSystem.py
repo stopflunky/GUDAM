@@ -3,7 +3,7 @@ import json
 
 # Configurazione del consumer
 consumer_config = {
-    'bootstrap.servers': 'localhost:29092',
+    'bootstrap.servers': 'kafka-broker:9092',
     'group.id': 'alert-system-group',       
     'auto.offset.reset': 'earliest'       
 }

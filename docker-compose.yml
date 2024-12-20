@@ -49,7 +49,7 @@ services:
       DATABASE_USER: postgres
       DATABASE_PASSWORD: Danilo2001
       DATABASE_NAME: Homework
-      KAFKA_BROKER: kafka:9092  # Assicurati di utilizzare il nome del servizio Kafka per la connessione
+      KAFKA_BROKER: kafka-broker:9092  # Assicurati di utilizzare il nome del servizio Kafka per la connessione
 
   # Zookeeper
   zookeeper:
@@ -75,6 +75,25 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker:9092,PLAINTEXT_INTERNAL://localhost:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    
+    restart: always
+
+
+
+  alert_system:
+    build: ./alert_system
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=Danilo2001
+      - DATABASE_NAME=Homework
+      - KAFKA_BROKER=kafka-broker:9092
+    depends_on:
+      - db
+      - kafka-broker
+    restart: always
+
+
 
 
 volumes:
