@@ -15,10 +15,10 @@ topic = 'to-notifier'
 
 # Configurazione dell'email
 smtp_config = {
-    'host': 'smtp.example.com',
+    'host': 'smtp.gmail.com',
     'port': 587,              
-    'user': 'example@yahoo.com', 
-    'password': 'example_password'      
+    'user': 'email@gmail.com', 
+    'password': 'password'      
 }
 
 # Funzione per inviare email
@@ -64,8 +64,8 @@ def consume_messages():
                     if email and ticker and condition:
                         subject = f"Alert: {ticker}"
                         body = f"Il valore del ticker {ticker} è {condition}."
-                        for i in range(100):
-                            print(f"Invio email a {email} con oggetto: {subject} e corpo: {body}")
+
+                        print(f"Invio email a {email} con oggetto: {subject} e corpo: {body}")
                         # Invia l'email
                         send_email(email, subject, body)
                         
