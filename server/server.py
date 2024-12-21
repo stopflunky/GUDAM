@@ -126,9 +126,7 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
                 print(f"[CACHE HIT] La richiesta con ID {request.requestID} è già stata processata.")
                 return request_cache[request.requestID]
         
-
         try:
-
             self.cursor.execute("BEGIN")
 
             # Verifica se l'utente esiste nel database
@@ -158,8 +156,6 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
                 request_cache[request.requestID] = response
 
         return response
-        
-
 
     # Funzione di cancellazione di un utente
     def DeleteUser(self, request, context):         
@@ -265,6 +261,25 @@ class QueryService(file_pb2_grpc.QueryServiceServicer):
         # Gestione delle eccezioni
         except Exception as e:
             return file_pb2.UserResponse(message=f"Errore durante la ricerca del valore del titolo: {str(e)}")
+        
+    # Funzione per ottenere le soglie (low_value e high_value) di un utente
+    def GetTresholds(self, request, context):
+        try:
+            # Recupera le soglie dell'utente dal database
+            self.cursor.execute("SELECT low_value, high_value FROM users WHERE email = %s;", (request.email,))
+            result = self.cursor.fetchone()
+
+            if not result:
+                # Se l'utente non è trovato, restituisci un messaggio di errore
+                return file_pb2.UserResponse(message="Errore: utente non trovato.")
+
+            # Recupera i valori di low_value e high_value
+            low_value, high_value = result
+            return file_pb2.UserResponse(message=f"Soglie dell'utente: Low Value = {low_value}, High Value = {high_value}")
+
+        # Gestione delle eccezioni
+        except Exception as e:
+            return file_pb2.UserResponse(message=f"Errore durante la ricerca delle soglie: {str(e)}")
 
 #------------------------------------------------------------
 

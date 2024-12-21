@@ -5,7 +5,7 @@ import warnings
 
 import file_pb2 as file__pb2
 
-GRPC_GENERATED_VERSION = '1.67.1'
+GRPC_GENERATED_VERSION = '1.68.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -255,6 +255,11 @@ class QueryServiceStub(object):
                 request_serializer=file__pb2.GetAvarageXDaysRequest.SerializeToString,
                 response_deserializer=file__pb2.UserResponse.FromString,
                 _registered_method=True)
+        self.GetTresholds = channel.unary_unary(
+                '/greeting.QueryService/GetTresholds',
+                request_serializer=file__pb2.ThresholdsRequest.SerializeToString,
+                response_deserializer=file__pb2.UserResponse.FromString,
+                _registered_method=True)
 
 
 class QueryServiceServicer(object):
@@ -284,6 +289,12 @@ class QueryServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetTresholds(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_QueryServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -305,6 +316,11 @@ def add_QueryServiceServicer_to_server(servicer, server):
             'GetAvaragePriceOfXDays': grpc.unary_unary_rpc_method_handler(
                     servicer.GetAvaragePriceOfXDays,
                     request_deserializer=file__pb2.GetAvarageXDaysRequest.FromString,
+                    response_serializer=file__pb2.UserResponse.SerializeToString,
+            ),
+            'GetTresholds': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetTresholds,
+                    request_deserializer=file__pb2.ThresholdsRequest.FromString,
                     response_serializer=file__pb2.UserResponse.SerializeToString,
             ),
     }
@@ -415,6 +431,33 @@ class QueryService(object):
             target,
             '/greeting.QueryService/GetAvaragePriceOfXDays',
             file__pb2.GetAvarageXDaysRequest.SerializeToString,
+            file__pb2.UserResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetTresholds(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/greeting.QueryService/GetTresholds',
+            file__pb2.ThresholdsRequest.SerializeToString,
             file__pb2.UserResponse.FromString,
             options,
             channel_credentials,

@@ -16,6 +16,7 @@ service QueryService
   rpc LoginUser(LoginRequest) returns (UserResponse) {}
   rpc GetTicker(GetTickerRequest) returns (UserResponse) {}
   rpc GetAvaragePriceOfXDays(GetAvarageXDaysRequest) returns (UserResponse){}
+  rpc GetTresholds(ThresholdsRequest) returns (UserResponse) {}
 }
 
 message PingMessage
@@ -73,4 +74,9 @@ message ModifyLowHighRequest
   string requestID = 2;
   string lowValue = 3;
   string highValue = 4;
+}
+
+message ThresholdsRequest
+{
+  string email = 1;
 }

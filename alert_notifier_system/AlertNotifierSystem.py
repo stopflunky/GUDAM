@@ -2,6 +2,7 @@ from confluent_kafka import Consumer, KafkaException, KafkaError
 import smtplib
 from email.mime.text import MIMEText
 import json
+import time
 
 # Configurazione del consumer
 consumer_config = {
@@ -17,9 +18,12 @@ topic = 'to-notifier'
 smtp_config = {
     'host': 'smtp.gmail.com',
     'port': 587,              
-    'user': 'email@gmail.com', 
-    'password': 'password'      
+    'user': 'daniloverde2001@gmail.com', 
+    'password': 'kbpe tuzx feke psrn'      
 }
+
+# Dizionario per tracciare l'ultimo invio email
+last_email_sent = {}
 
 # Funzione per inviare email
 def send_email(to, subject, body):
@@ -32,13 +36,25 @@ def send_email(to, subject, body):
 
         # Connessione al server SMTP
         with smtplib.SMTP(smtp_config['host'], smtp_config['port']) as server:
-            server.starttls()  # Avvia la connessione sicura
+            server.starttls()
             server.login(smtp_config['user'], smtp_config['password'])
             server.sendmail(smtp_config['user'], to, msg.as_string())
 
         print(f"Email inviata con successo a {to}")
     except Exception as e:
         print(f"Errore durante l'invio dell'email a {to}: {e}")
+
+# Funzione per verificare se un'email può essere inviata
+def can_send_email(email):
+    current_time = time.time()
+    if email in last_email_sent:
+        last_sent_time = last_email_sent[email]
+        # Controlla se sono passate almeno 24 ore
+        if current_time - last_sent_time < 86400: 
+            return False
+    # Aggiorna l'ultimo invio email
+    last_email_sent[email] = current_time
+    return True
 
 # Funzione per consumare i messaggi
 def consume_messages():
@@ -65,10 +81,13 @@ def consume_messages():
                         subject = f"Alert: {ticker}"
                         body = f"Il valore del ticker {ticker} è {condition}."
 
-                        print(f"Invio email a {email} con oggetto: {subject} e corpo: {body}")
-                        # Invia l'email
-                        send_email(email, subject, body)
-                        
+                        # Controlla se possiamo inviare l'email
+                        if can_send_email(email):
+                            print(f"Invio email a {email} con oggetto: {subject} e corpo: {body}")
+                            send_email(email, subject, body)
+                        else:
+                            print(f"Email a {email} non inviata: limite di 24 ore non superato.")
+
                 except json.JSONDecodeError:
                     print("Errore nel parsing del messaggio JSON.")
 

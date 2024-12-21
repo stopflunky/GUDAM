@@ -166,7 +166,6 @@ def modify_ticker_values(command_stub):
         clear_terminal()
         return
 
-
     lowValue = input("Inserisci il valore minimo (per allerta) del ticker: ")
     highValue = input("Inserisci il valore massimo (per allerta) del ticker: ")
 
@@ -191,12 +190,7 @@ def modify_ticker_values(command_stub):
         lowValue = input("Inserisci il valore minimo (per allerta) del ticker: ")
         highValue = input("Inserisci il valore massimo (per allerta) del ticker: ")
 
-    
-
     request_id = str(uuid.uuid4())
-
-    
-
     request = file_pb2.ModifyLowHighRequest(email=current_email, requestID=request_id, lowValue=lowValue, highValue=highValue)
 
     try:
@@ -319,6 +313,29 @@ def GetAvaragePriceOfXDays(query_stub):
 
 #------------------------------------------------------------
 
+# Funzione per ottenere le soglie (low_value e high_value) di un utente
+def get_tresholds(query_stub):
+    if not is_authenticated:
+        print("Devi effettuare il login o la registrazione prima di visualizzare le soglie.")
+        time.sleep(2)
+        clear_terminal()
+        return
+
+    request_id = str(uuid.uuid4())
+    request = file_pb2.UserRequest(email=current_email, requestID=request_id)
+
+    try:
+        response = query_stub.GetTresholds(request)
+        print(response.message)
+        time.sleep(2)
+        clear_terminal()
+    except RpcError as e:
+        print(f"Errore RPC: {e.code()} - {e.details()}")
+        time.sleep(2)
+        clear_terminal()
+
+#------------------------------------------------------------
+
 def run():
     global is_authenticated
     channel = grpc.insecure_channel('localhost:50051')
@@ -340,7 +357,8 @@ def run():
             print("3. Elimina utente")
             print("4. Ottieni ticker utente")
             print("5. Ottieni la media degli ultimi X valori del ticker")
-            print("6. Esci (torna al login)")
+            print("6. Visualizza le soglie dell'utente")
+            print("7. Esci (torna al login)")
         else:
             print("\n--- Menu Principale ---")
             print("1. Login utente")
@@ -363,7 +381,9 @@ def run():
                 get_ticker(query_stub)
             elif choice == '5':
                 GetAvaragePriceOfXDays(query_stub)
-            elif choice == '6':
+            elif choice == '6':  # Gestione della nuova funzione
+                get_tresholds(query_stub)
+            elif choice == '7':
                 is_authenticated = False
                 current_email = None
                 print("Sei stato disconnesso. Torna al login.")
