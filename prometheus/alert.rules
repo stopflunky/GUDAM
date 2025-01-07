@@ -1,0 +1,11 @@
+groups:
+  - name: RequestCountAlerts
+    rules:
+      - alert: HighRequestCount
+        expr: request_counter_total > 10
+        for: 10s                        
+        labels:
+          severity: critical
+        annotations:
+          summary: "Numero elevato di richieste"
+          description: "Il numero totale di richieste HTTP ha superato 10 nel sistema."

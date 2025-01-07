@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+rule_files:
+  - "alert.rules"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'alert_manager:9093'
+
+scrape_configs:
+  # Monitoraggio del gRPC Server
+  - job_name: "grpc_server"
+    static_configs:
+      - targets: ["grpc_server:9999"]
+        labels:
+          service: "grpc_server"

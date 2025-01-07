@@ -7,6 +7,8 @@ import file_pb2_grpc
 import psycopg2
 import yfinance as yf
 from datetime import datetime, timedelta
+import prometheus_client
+import socket
 
 #------------------------------------------------------------
 
@@ -21,6 +23,22 @@ DATABASE_CONFIG = {
 
 #------------------------------------------------------------
 
+# Configurazione di Prometheus
+HOSTNAME = socket.gethostname()
+NODE_NAME = "server"
+APP_NAME = "server-exporter"
+
+# Definizione delle metriche
+REQUEST_COUNTER = prometheus_client.Counter(
+    "request_counter",
+    "Contatore delle richieste",
+    ["hostname", "node_name", "app_name"]
+)
+
+#------------------------------------------------------------
+
+# Configurazione della cache
+
 request_cache = {}
 cache_lock = Lock()
 
@@ -34,6 +52,7 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
 
     # Funzione di creazione di un utente
     def CreateUser(self, request, context):
+        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
         # Controllo duplicati tramite cache
         with cache_lock:
             if request.requestID in request_cache:
@@ -77,6 +96,8 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
 
     # Funzione di aggiornamento del ticker di un utente
     def UpdateUser(self, request, context):
+        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+
         with cache_lock:
             if request.requestID in request_cache:
                 print(f"[CACHE HIT] La richiesta con ID {request.requestID} è già stata processata.")
@@ -120,6 +141,7 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
     
      # Funzione di aggiornamento dei valori di basso e alto di un utente
     def UpdateHighLow(self, request, context):
+        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
 
         with cache_lock:
             if request.requestID in request_cache:
@@ -158,7 +180,8 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
         return response
 
     # Funzione di cancellazione di un utente
-    def DeleteUser(self, request, context):         
+    def DeleteUser(self, request, context): 
+        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()        
         try:
             # Cerca l'utente nel DB
             self.cursor.execute("DELETE FROM users WHERE email = %s;",(request.email,))
@@ -184,10 +207,12 @@ class QueryService(file_pb2_grpc.QueryServiceServicer):
 
     # Funzione di ping per verificare se il server è attivo
     def Ping(self, request, context):
+        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
         return file_pb2.PingMessage(message="pong")
 
     # Funzione di login per verificare se l'utente esiste nel DB
     def LoginUser(self, request, context):
+        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
         try:
             # Recupera l'utente dal database in base all'email
             self.cursor.execute("SELECT email, password FROM users WHERE email = %s", (request.email,))
@@ -212,6 +237,7 @@ class QueryService(file_pb2_grpc.QueryServiceServicer):
 
     # Funzione per ottenere il ticker di un utente
     def GetTicker(self, request, context):
+        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
         try:
             # Cerca l'utente nel DB e ottiene il suo ticker
             self.cursor.execute("SELECT ticker FROM users WHERE email = %s;", (request.email,))
@@ -237,7 +263,7 @@ class QueryService(file_pb2_grpc.QueryServiceServicer):
 
     # Funzione per ottenere la media degli ultimi X giorni di un ticker
     def GetAvaragePriceOfXDays(self, request, contest):
-
+        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
         try:
             days = int(request.days)
 
@@ -264,6 +290,7 @@ class QueryService(file_pb2_grpc.QueryServiceServicer):
         
     # Funzione per ottenere le soglie (low_value e high_value) di un utente
     def GetTresholds(self, request, context):
+        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
         try:
             # Recupera le soglie dell'utente dal database
             self.cursor.execute("SELECT low_value, high_value FROM users WHERE email = %s;", (request.email,))
@@ -284,6 +311,8 @@ class QueryService(file_pb2_grpc.QueryServiceServicer):
 #------------------------------------------------------------
 
 def serve():
+    
+    prometheus_client.start_http_server(9999)
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     file_pb2_grpc.add_CommandServiceServicer_to_server(CommandService(), server)
     file_pb2_grpc.add_QueryServiceServicer_to_server(QueryService(), server)

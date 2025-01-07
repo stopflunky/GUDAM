@@ -106,5 +106,32 @@ services:
       - kafka-broker
       - alert_system
 
+  # Prometheus
+  prometheus:
+    build:
+      context: ./prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+    ports:
+      # Per eseguire query su Prometheus, digitare sulla barra di ricerca del browser: http://localhost:9090/
+      - "9090:9090"
+    restart: always
+    depends_on:
+      - grpc_server
+
+  # Alert Manager
+  alert_manager:
+    container_name: alert_manager
+    build:
+      context: ./alert_manager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alert_manager:/etc/alertmanager
+    environment:
+      EMAIL_SENDER_USER: "daniloverde2001@gmail.com"
+      EMAIL_SENDER_PASSWORD: "kbpe tuzx feke psrn"
+
 volumes:
   db_data:

@@ -4,3 +4,4 @@ protobuf
 yfinance
 psycopg2-binary
 python-dateutil
+prometheus_client

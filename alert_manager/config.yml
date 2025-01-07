@@ -1,0 +1,19 @@
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'daniloverde2001@gmail.com'
+  smtp_auth_username: 'daniloverde2001@gmail.com'
+  smtp_auth_password: 'kbpe tuzx feke psrn'
+  smtp_require_tls: true
+
+route:
+  group_by: ['alertname']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 1h
+  receiver: 'email_notifications'
+
+receivers:
+  - name: 'email_notifications'
+    email_configs:
+      - to: 'danylaus98@gmail.com'
+        send_resolved: true

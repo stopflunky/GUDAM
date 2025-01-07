@@ -3,6 +3,6 @@ WORKDIR /app
 COPY server.py /app/
 COPY file_pb2.py /app/
 COPY file_pb2_grpc.py /app/
-RUN pip install --no-cache-dir grpcio grpcio-tools psycopg2-binary yfinance
+RUN pip install --no-cache-dir grpcio grpcio-tools psycopg2-binary yfinance prometheus_client
 EXPOSE 50051
 CMD ["python", "server.py"]
