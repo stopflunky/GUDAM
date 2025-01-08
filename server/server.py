@@ -35,6 +35,12 @@ REQUEST_COUNTER = prometheus_client.Counter(
     ["hostname", "node_name", "app_name"]
 )
 
+USERS_COUNTER = prometheus_client.Gauge(
+    "user_counter",
+    "Contatore degli utenti attualmente connessi",
+    ["hostname", "node_name", "app_name"]
+)
+
 #------------------------------------------------------------
 
 # Configurazione della cache
@@ -78,6 +84,7 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
             self.conn.commit()
 
             response = file_pb2.UserResponse(message="Successo")
+            USERS_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
 
         # Gestione delle eccezioni
         except psycopg2.IntegrityError as e:
@@ -190,6 +197,7 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
             if self.cursor.rowcount == 0:
                 return file_pb2.UserResponse(message="Errore: utente non trovato.")
             else:
+                USERS_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).dec()
                 return file_pb2.UserResponse(message="Utente eliminato con successo.")
 
         # Gestione delle eccezioni
@@ -227,6 +235,7 @@ class QueryService(file_pb2_grpc.QueryServiceServicer):
 
             # Confronta la password fornita con quella nel database
             if request.password == db_password:
+                USERS_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
                 return file_pb2.UserResponse(message="Accesso riuscito!")
             else:
                 return file_pb2.UserResponse(message="Errore: password errata.")

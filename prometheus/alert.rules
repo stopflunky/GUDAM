@@ -3,9 +3,20 @@ groups:
     rules:
       - alert: HighRequestCount
         expr: request_counter_total > 10
-        for: 10s                        
+        for: 10s
         labels:
           severity: critical
         annotations:
           summary: "Numero elevato di richieste"
           description: "Il numero totale di richieste HTTP ha superato 10 nel sistema."
+
+  - name: UserCountAlerts
+    rules:
+      - alert: HighUserCount
+        expr: user_counter > 3
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Numero elevato di utenti"
+          description: "Il numero di utenti connessi ha superato 3 nel sistema."
