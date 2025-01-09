@@ -4,6 +4,24 @@ import psycopg2
 import yfinance as yf
 from circuit_breaker import CircuitBreaker, CircuitBreakerOpenException
 from confluent_kafka import Producer
+import prometheus_client
+import socket
+
+HOSTNAME = socket.gethostname()
+NODE_NAME = "data_collector"
+APP_NAME = "data_collector_exporter"
+
+tickers_count = prometheus_client.Gauge(
+    'tickers_count', 
+    'Numero di tickers letti dal DB', 
+    ["hostname", "node_name", "app_name"]
+)
+ 
+messages_count = prometheus_client.Counter(
+    'messages_count', 
+    'Numero di messaggi mandati al sistema di alert', 
+    ["hostname", "node_name", "app_name"]
+)
 
 #----------------------------------------
 
@@ -52,6 +70,9 @@ def query_tickers():
 
         # Recupera tutti i risultati
         rows = cursor.fetchall()
+
+        # Conta il numero di tickers
+        tickers_count.labels(HOSTNAME, NODE_NAME, APP_NAME).set(len(rows))
 
         # Inserisce ogni ticker nella lista
         for row in rows:
@@ -110,6 +131,8 @@ def get_stock_data(ticker):
 # Funzione principale
 def main():
 
+    prometheus_client.start_http_server(50056)
+
     # Configurazione iniziale, ad esempio istanze di circuit breaker
     get_data_circuit_breaker = CircuitBreaker(failure_threshold=3, recovery_timeout=5)
     update_data_circuit_breaker = CircuitBreaker(failure_threshold=3, recovery_timeout=5)
@@ -129,6 +152,7 @@ def main():
                                    "last_value": last_value}
                         producer.produce(topic, json.dumps(message), callback = delivery_report)
                         producer.flush()
+                        messages_count.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
 
                     except CircuitBreakerOpenException:
                         print(f"Circuito aperto durante l'aggiornamento del ticker {ticker}")

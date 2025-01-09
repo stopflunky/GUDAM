@@ -119,6 +119,7 @@ services:
     restart: always
     depends_on:
       - grpc_server
+      - datacollector
 
   # Alert Manager
   alert_manager:

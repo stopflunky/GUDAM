@@ -20,3 +20,23 @@ groups:
         annotations:
           summary: "Numero elevato di utenti"
           description: "Il numero di utenti connessi ha superato 3 nel sistema."
+
+  - name: DataCollectorAlerts
+    rules:
+      - alert: HighTickersCount
+        expr: tickers_count > 100
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Numero elevato di tickers"
+          description: "Il numero di tickers letti dal database ha superato 100. Verifica il sistema."
+
+      - alert: HighMessagesCount
+        expr: rate(messages_count[1m]) > 50
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Numero elevato di messaggi inviati"
+          description: "Il sistema ha inviato più di 50 messaggi al minuto. Potrebbe esserci un problema con il flusso dati."
