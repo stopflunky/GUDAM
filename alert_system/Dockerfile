@@ -3,5 +3,6 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install confluent-kafka
+RUN pip install prometheus_client
 COPY . .
 CMD ["python", "AlertSystem.py"]

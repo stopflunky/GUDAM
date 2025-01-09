@@ -1,5 +1,5 @@
 groups:
-  - name: RequestCountAlerts
+  - name: ServerAlerts
     rules:
       - alert: HighRequestCount
         expr: request_counter_total > 10
@@ -9,9 +9,6 @@ groups:
         annotations:
           summary: "Numero elevato di richieste"
           description: "Il numero totale di richieste HTTP ha superato 10 nel sistema."
-
-  - name: UserCountAlerts
-    rules:
       - alert: HighUserCount
         expr: user_counter > 3
         for: 10s
@@ -31,12 +28,58 @@ groups:
         annotations:
           summary: "Numero elevato di tickers"
           description: "Il numero di tickers letti dal database ha superato 100. Verifica il sistema."
-
       - alert: HighMessagesCount
-        expr: rate(messages_count[1m]) > 50
+        expr: rate(messages_count[1m]) > 50 
         for: 1m
         labels:
           severity: critical
         annotations:
           summary: "Numero elevato di messaggi inviati"
           description: "Il sistema ha inviato più di 50 messaggi al minuto. Potrebbe esserci un problema con il flusso dati."
+    
+  - name: AlertSystemAlerts
+    rules:
+      - alert: HighMessageProcessingTime
+        expr: message_processing_time > 1
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Tempo elevato di elaborazione messaggi"
+          description: "Il tempo medio per processare un messaggio ha superato 1 secondo. Controllare il sistema."
+      - alert: HighMessagesConsumed
+        expr: rate(message_consumed_time[1m]) > 100
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Numero elevato di messaggi consumati"
+          description: "Più di 100 messaggi al minuto sono stati consumati dal topic Kafka. Verificare l'integrità del sistema."
+      - alert: HighMessagesProduced
+        expr: rate(message_produced_time[1m]) > 100
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Numero elevato di messaggi prodotti"
+          description: "Più di 100 messaggi al minuto sono stati prodotti per il sistema di notifica. Controllare il flusso di notifica."
+
+  - name: AlertToNotifierSystemAlerts
+    rules:
+      - alert: HighFailedEmailCount
+        expr: ans_email_processing_time > 30s
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Tempo di invio email fallito"
+          description: "Più di 30 secondi sono passati per l'invio di una singola mail."
+
+      - alert: HighSentEmailCount
+        expr: ans_sent_emails_count > 100
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Numero elevato di email inviate"
+          description: "Il sistema ha inviato più di 100 email al minuto. Controllare il flusso di invio email."

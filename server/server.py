@@ -29,14 +29,14 @@ NODE_NAME = "server"
 APP_NAME = "server-exporter"
 
 # Definizione delle metriche
-REQUEST_COUNTER = prometheus_client.Counter(
-    "request_counter",
+s_requests_counter = prometheus_client.Counter(
+    "s_request_counter",
     "Contatore delle richieste",
     ["hostname", "node_name", "app_name"]
 )
 
-USERS_COUNTER = prometheus_client.Gauge(
-    "user_counter",
+s_users_counter = prometheus_client.Gauge(
+    "s_user_counter",
     "Contatore degli utenti attualmente connessi",
     ["hostname", "node_name", "app_name"]
 )
@@ -58,7 +58,7 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
 
     # Funzione di creazione di un utente
     def CreateUser(self, request, context):
-        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+        s_requests_counter.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
         # Controllo duplicati tramite cache
         with cache_lock:
             if request.requestID in request_cache:
@@ -84,7 +84,7 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
             self.conn.commit()
 
             response = file_pb2.UserResponse(message="Successo")
-            USERS_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+            s_users_counter.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
 
         # Gestione delle eccezioni
         except psycopg2.IntegrityError as e:
@@ -103,7 +103,7 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
 
     # Funzione di aggiornamento del ticker di un utente
     def UpdateUser(self, request, context):
-        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+        s_requests_counter.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
 
         with cache_lock:
             if request.requestID in request_cache:
@@ -148,7 +148,7 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
     
      # Funzione di aggiornamento dei valori di basso e alto di un utente
     def UpdateHighLow(self, request, context):
-        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+        s_requests_counter.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
 
         with cache_lock:
             if request.requestID in request_cache:
@@ -188,7 +188,7 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
 
     # Funzione di cancellazione di un utente
     def DeleteUser(self, request, context): 
-        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()        
+        s_requests_counter.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()        
         try:
             # Cerca l'utente nel DB
             self.cursor.execute("DELETE FROM users WHERE email = %s;",(request.email,))
@@ -197,7 +197,7 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
             if self.cursor.rowcount == 0:
                 return file_pb2.UserResponse(message="Errore: utente non trovato.")
             else:
-                USERS_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).dec()
+                s_users_counter.labels(HOSTNAME, NODE_NAME, APP_NAME).dec()
                 return file_pb2.UserResponse(message="Utente eliminato con successo.")
 
         # Gestione delle eccezioni
@@ -215,12 +215,12 @@ class QueryService(file_pb2_grpc.QueryServiceServicer):
 
     # Funzione di ping per verificare se il server è attivo
     def Ping(self, request, context):
-        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+        s_requests_counter.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
         return file_pb2.PingMessage(message="pong")
 
     # Funzione di login per verificare se l'utente esiste nel DB
     def LoginUser(self, request, context):
-        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+        s_requests_counter.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
         try:
             # Recupera l'utente dal database in base all'email
             self.cursor.execute("SELECT email, password FROM users WHERE email = %s", (request.email,))
@@ -235,7 +235,7 @@ class QueryService(file_pb2_grpc.QueryServiceServicer):
 
             # Confronta la password fornita con quella nel database
             if request.password == db_password:
-                USERS_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+                s_users_counter.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
                 return file_pb2.UserResponse(message="Accesso riuscito!")
             else:
                 return file_pb2.UserResponse(message="Errore: password errata.")
@@ -246,7 +246,7 @@ class QueryService(file_pb2_grpc.QueryServiceServicer):
 
     # Funzione per ottenere il ticker di un utente
     def GetTicker(self, request, context):
-        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+        s_requests_counter.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
         try:
             # Cerca l'utente nel DB e ottiene il suo ticker
             self.cursor.execute("SELECT ticker FROM users WHERE email = %s;", (request.email,))
@@ -272,7 +272,7 @@ class QueryService(file_pb2_grpc.QueryServiceServicer):
 
     # Funzione per ottenere la media degli ultimi X giorni di un ticker
     def GetAvaragePriceOfXDays(self, request, contest):
-        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+        s_requests_counter.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
         try:
             days = int(request.days)
 
@@ -299,7 +299,7 @@ class QueryService(file_pb2_grpc.QueryServiceServicer):
         
     # Funzione per ottenere le soglie (low_value e high_value) di un utente
     def GetTresholds(self, request, context):
-        REQUEST_COUNTER.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+        s_requests_counter.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
         try:
             # Recupera le soglie dell'utente dal database
             self.cursor.execute("SELECT low_value, high_value FROM users WHERE email = %s;", (request.email,))

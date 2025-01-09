@@ -3,6 +3,32 @@ from email.mime.text import MIMEText
 import psycopg2
 import json
 import smtplib
+import prometheus_client
+import socket
+import time
+
+# Definizione metriche di monitoraggio
+HOSTNAME = socket.gethostname()
+NODE_NAME = "alert_system"
+APP_NAME = "alert_system_exporter"
+
+as_messages_processing_time = prometheus_client.Gauge(
+    'as_message_processing_time', 
+    'Numero di tickers letti dal DB', 
+    ["hostname", "node_name", "app_name"]
+)
+ 
+as_messages_consumed_count = prometheus_client.Counter(
+    'as_message_consumed_time', 
+    'Numero di messaggi mandati al sistema di alert', 
+    ["hostname", "node_name", "app_name"]
+)
+
+as_messages_produced_count = prometheus_client.Counter(
+    'as_message_produced_time', 
+    'Numero di messaggi mandati al sistema di notifica', 
+    ["hostname", "node_name", "app_name"]
+)
 
 # Configurazione del database PostgreSQL
 db_config = {
@@ -82,6 +108,8 @@ def check_thresholds_and_notify(ticker, last_value):
                 )
                 producer.flush()
 
+                as_messages_produced_count.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+
         conn.commit()
         cursor.close()
         conn.close()
@@ -106,6 +134,8 @@ def consume_messages():
                 else:
                     raise KafkaException(msg.error())
             else:
+                as_messages_consumed_count.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+                start_time = time.time()
                 # Processa il messaggio
                 print(f"Messaggio ricevuto: {msg.value().decode('utf-8')}")
                 try:
@@ -121,6 +151,9 @@ def consume_messages():
                 except json.JSONDecodeError:
                     print("Errore nel parsing del messaggio JSON.")
 
+                processing_time = time.time() - start_time
+                as_messages_processing_time.labels(HOSTNAME, NODE_NAME, APP_NAME).set(processing_time)
+
     except KeyboardInterrupt:
         print("Interruzione del consumer.")
     finally:
@@ -128,4 +161,5 @@ def consume_messages():
 
 # Funzione principale per avviare il consumer
 if __name__ == "__main__":
+    prometheus_client.start_http_server(50057)
     consume_messages()

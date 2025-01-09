@@ -11,14 +11,14 @@ HOSTNAME = socket.gethostname()
 NODE_NAME = "data_collector"
 APP_NAME = "data_collector_exporter"
 
-tickers_count = prometheus_client.Gauge(
-    'tickers_count', 
+dc_tickers_count = prometheus_client.Gauge(
+    'dc_tickers_count', 
     'Numero di tickers letti dal DB', 
     ["hostname", "node_name", "app_name"]
 )
  
-messages_count = prometheus_client.Counter(
-    'messages_count', 
+dc_messages_produced_count = prometheus_client.Counter(
+    'dc_messages_count', 
     'Numero di messaggi mandati al sistema di alert', 
     ["hostname", "node_name", "app_name"]
 )
@@ -72,7 +72,7 @@ def query_tickers():
         rows = cursor.fetchall()
 
         # Conta il numero di tickers
-        tickers_count.labels(HOSTNAME, NODE_NAME, APP_NAME).set(len(rows))
+        dc_tickers_count.labels(HOSTNAME, NODE_NAME, APP_NAME).set(len(rows))
 
         # Inserisce ogni ticker nella lista
         for row in rows:
@@ -152,7 +152,7 @@ def main():
                                    "last_value": last_value}
                         producer.produce(topic, json.dumps(message), callback = delivery_report)
                         producer.flush()
-                        messages_count.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
+                        dc_messages_produced_count.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
 
                     except CircuitBreakerOpenException:
                         print(f"Circuito aperto durante l'aggiornamento del ticker {ticker}")

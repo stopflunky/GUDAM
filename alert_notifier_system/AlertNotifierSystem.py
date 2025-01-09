@@ -3,6 +3,25 @@ import smtplib
 from email.mime.text import MIMEText
 import json
 import time
+import prometheus_client
+import socket
+
+# Definizione metriche di monitoraggio
+HOSTNAME = socket.gethostname()
+NODE_NAME = "alert_notifier_system"
+APP_NAME = "alert_notifier_system_exporter"
+
+ans_email_processing_time = prometheus_client.Gauge(
+    'ans_email_processing_time', 
+    'Tempo di invio di una email', 
+    ["hostname", "node_name", "app_name"]
+)
+ 
+ans_sent_emails_count = prometheus_client.Counter(
+    'ans_sent_emails_count', 
+    'Numero di email inviate', 
+    ["hostname", "node_name", "app_name"]
+)
 
 # Configurazione del consumer
 consumer_config = {
@@ -28,6 +47,7 @@ last_email_sent = {}
 # Funzione per inviare email
 def send_email(to, subject, body):
     try:
+        startTime = time.time()
         # Crea il messaggio email
         msg = MIMEText(body)
         msg['From'] = smtp_config['user']
@@ -41,6 +61,8 @@ def send_email(to, subject, body):
             server.sendmail(smtp_config['user'], to, msg.as_string())
 
         print(f"Email inviata con successo a {to}")
+        ans_email_processing_time.labels(HOSTNAME, NODE_NAME, APP_NAME).set(time.time() - startTime)
+        ans_sent_emails_count.labels(HOSTNAME, NODE_NAME, APP_NAME).inc() 
     except Exception as e:
         print(f"Errore durante l'invio dell'email a {to}: {e}")
 
@@ -98,4 +120,5 @@ def consume_messages():
 
 # Esegui il consumer
 if __name__ == "__main__":
+    prometheus_client.start_http_server(50058)
     consume_messages()
