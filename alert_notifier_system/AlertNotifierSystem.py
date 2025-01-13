@@ -66,18 +66,6 @@ def send_email(to, subject, body):
     except Exception as e:
         print(f"Errore durante l'invio dell'email a {to}: {e}")
 
-# Funzione per verificare se un'email può essere inviata
-def can_send_email(email):
-    current_time = time.time()
-    if email in last_email_sent:
-        last_sent_time = last_email_sent[email]
-        # Controlla se sono passate almeno 24 ore
-        if current_time - last_sent_time < 86400: 
-            return False
-    # Aggiorna l'ultimo invio email
-    last_email_sent[email] = current_time
-    return True
-
 # Funzione per consumare i messaggi
 def consume_messages():
     consumer.subscribe([topic])
@@ -104,11 +92,8 @@ def consume_messages():
                         body = f"Il valore del ticker {ticker} è {condition}."
 
                         # Controlla se possiamo inviare l'email
-                        if can_send_email(email):
-                            print(f"Invio email a {email} con oggetto: {subject} e corpo: {body}")
-                            send_email(email, subject, body)
-                        else:
-                            print(f"Email a {email} non inviata: limite di 24 ore non superato.")
+                        print(f"Invio email a {email} con oggetto: {subject} e corpo: {body}")
+                        send_email(email, subject, body)
 
                 except json.JSONDecodeError:
                     print("Errore nel parsing del messaggio JSON.")

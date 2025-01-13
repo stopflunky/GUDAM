@@ -4,24 +4,18 @@ import file_pb2
 import file_pb2_grpc
 import uuid
 import time
-import os
-import platform
 from grpc import RpcError
 
 is_authenticated = False # Variabile per memorizzare lo stato di autenticazione dell'utente
 current_email = None  # Variabile per memorizzare l'email dell'utente autenticato
 MAX_RETRIES = 3  # Numero massimo di tentativi
-TIMEOUT = 5  # Timeout in secondi per ogni tentativo
+TIMEOUT = 10  # Timeout in secondi per ogni tentativo
 
 #------------------------------------------------------------
 
 # Funzione per pulire il terminale
 def clear_terminal():
-    
-    if platform.system() == "Windows":
-        os.system("cls")
-    else:
-        os.system("clear")
+    pass
 
 #------------------------------------------------------------
 
@@ -30,6 +24,17 @@ def hash_password(password):
     sha256_hash = hashlib.sha256()
     sha256_hash.update(password.encode('utf-8'))
     return sha256_hash.hexdigest()
+
+#------------------------------------------------------------
+
+# Funzione per verificare se un valore è un numero valido
+def validate_numeric_input(value, field_name):
+    try:
+        float(value)  # Validazione del valore senza conversione
+        return value
+    except ValueError:
+        print(f"Errore: {field_name} deve essere un numero valido.")
+        return None
 
 #------------------------------------------------------------
 
@@ -63,7 +68,7 @@ def login_user(query_stub):
 
     try:
         response = query_stub.LoginUser(request)
-        if response.message == "Accesso riuscito!":
+        if response.message == "Successo":
             print(response.message)
             time.sleep(2)
             clear_terminal()
@@ -92,39 +97,29 @@ def create_user(command_stub):
     password = input("Inserisci la password: ")
     hashed_password = hash_password(password)
     ticker = input("Inserisci il ticker dell'utente: ")
-    if(ticker == ""):
+    if ticker == "":
         print("Devi inserire un ticker.")
         time.sleep(2)
         clear_terminal()
         return
     request_id = str(uuid.uuid4())
 
-
-    lowValue = input("Inserisci il valore minimo (per allerta) del ticker: ")
-    highValue = input("Inserisci il valore massimo (per allerta) del ticker: ")
-
-    if lowValue == None and highValue == None:
-        pass
-
     while True:
-        
-        if lowValue == None and highValue == None:
-            
-            print("Devi inserire i valori per l'allerta del ticker.")
-
-        elif lowValue and highValue:
-            if float(lowValue) > float(highValue):
-                print("Il valore minimo non può essere maggiore di quello massimo.\n")
-            else:
-                break
-            
-        else:
-            break
-
         lowValue = input("Inserisci il valore minimo (per allerta) del ticker: ")
         highValue = input("Inserisci il valore massimo (per allerta) del ticker: ")
 
-    request = file_pb2.RegisterRequest(email=email, password=hashed_password, ticker=ticker, requestID=request_id, lowValue=lowValue, highValue=highValue)
+        lowValue = validate_numeric_input(lowValue, "Valore Minimo")
+        highValue = validate_numeric_input(highValue, "Valore Massimo")
+
+        if lowValue is None or highValue is None:
+            continue
+
+        if lowValue > highValue:
+            print("Il valore minimo non può essere maggiore di quello massimo.")
+        else:
+            break
+
+    request = file_pb2.RegisterRequest(email=email, password=hashed_password, ticker=ticker, lowValue=lowValue, highValue=highValue, requestID=request_id)
 
     retries = 0
     while retries < MAX_RETRIES:
@@ -157,7 +152,6 @@ def create_user(command_stub):
 #------------------------------------------------------------
 
 # Funzione per modificare i valori di low-value e high-value relativi al ticker
-
 def modify_ticker_values(command_stub):
 
     if not is_authenticated:
@@ -166,29 +160,20 @@ def modify_ticker_values(command_stub):
         clear_terminal()
         return
 
-    lowValue = input("Inserisci il valore minimo (per allerta) del ticker: ")
-    highValue = input("Inserisci il valore massimo (per allerta) del ticker: ")
-
-    if lowValue == None and highValue == None:
-        pass
-
     while True:
-        
-        if lowValue == None and highValue == None:
-            
-            print("Devi inserire i valori per l'allerta del ticker.")
-
-        elif lowValue and highValue:
-            if float(lowValue) > float(highValue):
-                print("Il valore minimo non può essere maggiore di quello massimo.\n")
-            else:
-                break
-            
-        else:
-            break
-
         lowValue = input("Inserisci il valore minimo (per allerta) del ticker: ")
         highValue = input("Inserisci il valore massimo (per allerta) del ticker: ")
+
+        lowValue = validate_numeric_input(lowValue, "Valore Minimo")
+        highValue = validate_numeric_input(highValue, "Valore Massimo")
+
+        if lowValue is None or highValue is None:
+            continue
+
+        if lowValue > highValue:
+            print("Il valore minimo non può essere maggiore di quello massimo.")
+        else:
+            break
 
     request_id = str(uuid.uuid4())
     request = file_pb2.ModifyLowHighRequest(email=current_email, requestID=request_id, lowValue=lowValue, highValue=highValue)
@@ -201,7 +186,6 @@ def modify_ticker_values(command_stub):
         return
 
     except RpcError as e:
-        
         print(f"Errore RPC: {e.code()} - {e.details()}")
         time.sleep(2)
         clear_terminal()
@@ -298,8 +282,14 @@ def GetAvaragePriceOfXDays(query_stub):
         clear_terminal()
         return
 
-    days = input("Inserisci il numero di valori: ")
-    request = file_pb2.GetAvarageXDaysRequest(days=days, email=current_email)
+    while True:
+        days = input("Inserisci il numero di valori: ")
+        days = validate_numeric_input(days, "Numero di Giorni")
+
+        if days is not None:
+            break
+
+    request = file_pb2.GetAvarageXDaysRequest(days=int(days), email=current_email)
 
     try:
         response = query_stub.GetAvaragePriceOfXDays(request)

@@ -16,6 +16,7 @@ CREATE TABLE users
     ticker VARCHAR(10) NOT NULL,
     low_value VARCHAR(10), 
     high_value VARCHAR(10),
+    last_notification_time TIMESTAMP DEFAULT NULL,
     FOREIGN KEY (ticker) REFERENCES tickers(ticker_name) ON DELETE CASCADE
 );
 
