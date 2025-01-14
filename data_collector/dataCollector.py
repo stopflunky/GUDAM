@@ -16,14 +16,12 @@ dc_tickers_count = prometheus_client.Gauge(
     'Numero di tickers letti dal DB', 
     ["hostname", "node_name", "app_name"]
 )
- 
+
 dc_messages_produced_count = prometheus_client.Counter(
     'dc_messages_count', 
     'Numero di messaggi mandati al sistema di alert', 
     ["hostname", "node_name", "app_name"]
 )
-
-#----------------------------------------
 
 # Configurazione della connessione al DB
 DATABASE_CONFIG = {
@@ -34,18 +32,17 @@ DATABASE_CONFIG = {
     "port": "5432"
 }
 
-#----------------------------------------
-
 producer_config = {
-    'bootstrap.servers': 'kafka-broker:9092',  # List of Kafka brokers
-    'acks': 'all',  # Ensure all in-sync replicas acknowledge the message
-    'max.in.flight.requests.per.connection': 1,  # Ensure ordering of messages
-    'batch.size': 500,  # Maximum size of a batch in bytes
-    'retries': 3  # Number of retries for failed messages
+    'bootstrap.servers': 'kafka-broker:9092',
+    'acks': 'all',
+    'max.in.flight.requests.per.connection': 1,
+    'batch.size': 500,
+    'retries': 3
 }
 
 producer = Producer(producer_config)
 topic = 'to-alert-system'
+
 
 def delivery_report(err, msg):
     if err:
@@ -53,70 +50,69 @@ def delivery_report(err, msg):
     else:
         print(f"Message delivered to topic '{msg.topic()}', partition {msg.partition()}, offset {msg.offset()}.")
 
-#----------------------------------------
 
-# Funzione Query: recupera i ticker, da aggiornare, dal DB
-def query_tickers():
+# Modello Ticker
+class Ticker:
+    def __init__(self, ticker_name, last_price=None):
+        self.ticker_name = ticker_name
+        self.last_price = last_price
 
-    tickers = []
+    def from_db_row(row):
+        return Ticker(ticker_name=row[0], last_price=row[1] if len(row) > 1 else None)
 
-    try:
-        conn = psycopg2.connect(**DATABASE_CONFIG)
-        cursor = conn.cursor()
+    def to_dict(self):
+        return {"ticker_name": self.ticker_name, "last_price": self.last_price}
 
-        # Query per recuperare i ticker
-        query = f"SELECT ticker_name FROM tickers;"
-        cursor.execute(query)
 
-        # Recupera tutti i risultati
-        rows = cursor.fetchall()
+# CQRS: Handler per le Query
+class QueryHandler:
+    def query_tickers():
+        tickers = []
+        try:
+            conn = psycopg2.connect(**DATABASE_CONFIG)
+            cursor = conn.cursor()
 
-        # Conta il numero di tickers
-        dc_tickers_count.labels(HOSTNAME, NODE_NAME, APP_NAME).set(len(rows))
+            query = f"SELECT ticker_name FROM tickers;"
+            cursor.execute(query)
 
-        # Inserisce ogni ticker nella lista
-        for row in rows:
-            tickers.append(row[0])  # row[0] contiene il valore del ticker
+            rows = cursor.fetchall()
+            dc_tickers_count.labels(HOSTNAME, NODE_NAME, APP_NAME).set(len(rows))
 
-        # Chiude il cursore e la connessione
-        cursor.close()
-        conn.close()
+            for row in rows:
+                tickers.append(Ticker.from_db_row(row))
 
-    except Exception as e:
-        print(f"Errore durante l'accesso al database: {e}")
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print(f"Errore durante l'accesso al database: {e}")
+        return tickers
 
-    return tickers
 
-# Funzione Command: aggiorna il valore di un ticker nel DB
-def command_update_ticker_value(ticker, last_value):
+# CQRS: Handler per i Comandi
+class CommandHandler:
+    def command_update_ticker_value(ticker_name, last_value):
+        try:
+            conn = psycopg2.connect(**DATABASE_CONFIG)
+            cursor = conn.cursor()
 
-    try:
-        conn = psycopg2.connect(**DATABASE_CONFIG)
-        cursor = conn.cursor()
+            last_value = float(last_value)
+            query = "UPDATE tickers SET last_price = %s WHERE ticker_name = %s;"
+            cursor.execute(query, (last_value, ticker_name,))
 
-        last_value = float(last_value)
-        query = "UPDATE tickers SET last_price = %s WHERE ticker_name = %s;"
-        cursor.execute(query, (last_value, ticker,))
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print(f"Errore durante l'accesso al database: {e}")
+            raise
 
-        conn.commit()
-
-        cursor.close()
-        conn.close()
-
-    except Exception as e:
-        print(f"Errore durante l'accesso al database: {e}")
-        raise
-
-#----------------------------------------
 
 # Funzione per recuperare i dati di un ticker da yfinance
 def get_stock_data(ticker):
-
     try:
         stock = yf.Ticker(ticker)
         data = stock.history(period="1d")
         if not data.empty:
-            # Ritorna il prezzo di chiusura più recente
             last_close = data['Close'].iloc[-1]
             return last_close
         else:
@@ -126,48 +122,44 @@ def get_stock_data(ticker):
         print(f"Errore durante il recupero dei dati per {ticker}: {e}")
         return None
 
-#----------------------------------------
 
-# Funzione principale
 def main():
-
     prometheus_client.start_http_server(50056)
 
-    # Configurazione iniziale, ad esempio istanze di circuit breaker
+    # Circuit Breakers
     get_data_circuit_breaker = CircuitBreaker(failure_threshold=3, recovery_timeout=5)
     update_data_circuit_breaker = CircuitBreaker(failure_threshold=3, recovery_timeout=5)
 
     while True:
-
-        tickers = query_tickers()
+        tickers = QueryHandler.query_tickers()
+        dc_tickers_count.labels(HOSTNAME, NODE_NAME, APP_NAME).set(len(tickers))
 
         for ticker in tickers:
             try:
-                last_value = get_data_circuit_breaker.call(lambda: get_stock_data(ticker))
+                last_value = get_data_circuit_breaker.call(lambda: get_stock_data(ticker.ticker_name))
                 if last_value:
                     try:
-                        update_data_circuit_breaker.call(lambda: command_update_ticker_value(ticker, last_value))
-                        message = {"message": f"Ticker {ticker} aggiornato a {last_value}!",
-                                   "ticker": ticker,
+                        CommandHandler.command_update_ticker_value(ticker.ticker_name, last_value)
+                        message = {"message": f"Ticker {ticker.ticker_name} aggiornato a {last_value}!",
+                                   "ticker": ticker.ticker_name,
                                    "last_value": last_value}
-                        producer.produce(topic, json.dumps(message), callback = delivery_report)
+                        producer.produce(topic, json.dumps(message), callback=delivery_report)
                         producer.flush()
                         dc_messages_produced_count.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
 
                     except CircuitBreakerOpenException:
-                        print(f"Circuito aperto durante l'aggiornamento del ticker {ticker}")
+                        print(f"Circuito aperto durante l'aggiornamento del ticker {ticker.ticker_name}")
                     except Exception as e:
-                        print(f"Errore durante l'aggiornamento del ticker {ticker}: {e}")
+                        print(f"Errore durante l'aggiornamento del ticker {ticker.ticker_name}: {e}")
 
             except CircuitBreakerOpenException:
-                print(f"Circuito aperto durante la raccolta dati per {ticker}")
+                print(f"Circuito aperto durante la raccolta dati per {ticker.ticker_name}")
             except Exception as e:
-                print(f"Errore durante la raccolta dati per {ticker}: {e}")
-        
+                print(f"Errore durante la raccolta dati per {ticker.ticker_name}: {e}")
+
         print("Update del ticker completato.")
         time.sleep(60)
 
-#----------------------------------------
 
 if __name__ == "__main__":
     main()

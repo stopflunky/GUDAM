@@ -59,7 +59,8 @@ producer = Producer(producer_config)
 topic1 = 'to-alert-system' 
 topic2 = 'to-notifier'
 
-# Models
+# Modelli
+
 class UserThreshold:
     def __init__(self, email: str, low_value: Optional[float], high_value: Optional[float], last_notification_time: Optional[datetime]):
         self.email = email
@@ -67,7 +68,6 @@ class UserThreshold:
         self.high_value = high_value
         self.last_notification_time = last_notification_time
 
-    @staticmethod
     def from_db_row(row):
         return UserThreshold(
             email=row[0],
@@ -92,7 +92,6 @@ class Notification:
 # CQRS: Handler per i Comandi
 class CommandHandler:
 
-    @staticmethod
     def update_notification_time(email, timestamp):
         try:
             conn = psycopg2.connect(**db_config)
@@ -107,7 +106,6 @@ class CommandHandler:
             cursor.close()
             conn.close()
 
-    @staticmethod
     def send_notification(notification: Notification):
         producer.produce(
             topic2,
@@ -117,7 +115,6 @@ class CommandHandler:
         producer.flush()
         as_messages_produced_count.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
 
-    @staticmethod
     def delivery_report(err, msg):
         if err:
             print(f"Errore nella consegna del messaggio: {err}")
@@ -127,7 +124,6 @@ class CommandHandler:
 # CQRS: Handler per le Query
 class QueryHandler:
 
-    @staticmethod
     def get_user_thresholds(ticker: str) -> List[UserThreshold]:
         try:
             conn = psycopg2.connect(**db_config)
