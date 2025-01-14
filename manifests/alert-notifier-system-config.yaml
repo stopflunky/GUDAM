@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-notifier-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alert-notifier-system
+  template:
+    metadata:
+      labels:
+        app: alert-notifier-system
+    spec:
+      initContainers:
+      - name: wait-for-kafka
+        image: busybox
+        command: ['sh', '-c', 'until nc -z -v -w30 kafka-service 9092; do echo "Waiting for Kafka..."; sleep 5; done']
+      containers:
+      - name: alert-notifier-system
+        image: stopflunky/gudam:gudam-alert_notifier_system
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+            ephemeral-storage: "1Gi"
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka-broker:9092"
+        - name: DATABASE_HOST
+          value: "postgres-db-service"
+        - name: DATABASE_PORT
+          value: "5432"
+        - name: DATABASE_USER
+          value: "postgres"
+        - name: DATABASE_PASSWORD
+          value: "Danilo2001"
+        - name: DATABASE_NAME
+          value: "Homework"
+        - name: KAFKA_BROKER
+          value: "kafka-service:9092"
+        ports:
+        - containerPort: 8081  # Modifica questa porta in base a quella che usa l'Alert Notifier System
+
+
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: alert-notification-service
+  labels:
+    app: alert-notification
+spec:
+  ports:
+  - name: http
+    protocol: TCP
+    port: 8081
+    targetPort: 8081
