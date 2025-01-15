@@ -18,7 +18,7 @@ spec:
         command: ['sh', '-c', 'until nc -z -v -w30 postgres-db-service 5432; do echo "Waiting for PostgreSQL..."; sleep 5; done']
       containers:
       - name: grpc-server
-        image: stopflunky/gudam:gudam-grpc_server
+        image: danilo238/gudam:gudam-grpc_server
         resources:
           requests:
             memory: "256Mi"
@@ -57,4 +57,4 @@ spec:
   - protocol: TCP
     port: 50051
     targetPort: 50051
-    nodePort: 30051  # Opzionale, Kubernetes assegnerà automaticamente una se non specificata
+    nodePort: 30051 

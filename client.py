@@ -309,7 +309,7 @@ def GetAvaragePriceOfXDays(query_stub):
         if days is not None:
             break
 
-    request = file_pb2.GetAvarageXDaysRequest(days=int(days), email=current_email)
+    request = file_pb2.GetAvarageXDaysRequest(days=days, email=current_email)
 
     try:
         response = query_stub.GetAvaragePriceOfXDays(request)

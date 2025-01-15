@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: alertmanager
-        image: stopflunky/gudam:gudam-alert_manager
+        image: danilo238/gudam:gudam-alert_manager
         args:
         - "--config.file=/etc/alertmanager/config.yml"
         - "--storage.path=/alertmanager"

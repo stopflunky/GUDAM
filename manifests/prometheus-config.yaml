@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: prometheus-container
-        image: stopflunky/gudam:gudam-prometheus
+        image: danilo238/gudam:gudam-prometheus
         args:
           - "--config.file=/etc/prometheus/prometheus.yml"
           - "--storage.tsdb.path=/prometheus"

@@ -21,7 +21,7 @@ spec:
         command: ['sh', '-c', 'until nc -z -v -w30 kafka-broker 9092; do echo "Waiting for Kafka..."; sleep 5; done']
       containers:
       - name: alert-system
-        image: stopflunky/gudam:gudam-alert_system
+        image: danilo238/gudam:gudam-alert_system
         resources:
           requests:
             cpu: "500m"
@@ -44,7 +44,7 @@ spec:
         - name: KAFKA_BROKER
           value: "kafka-broker:9092"
         ports:
-        - containerPort: 8080  # Assicurati che questa sia la porta corretta
+        - containerPort: 8080 
 
 
 ---

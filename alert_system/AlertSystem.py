@@ -35,7 +35,7 @@ db_config = {
     "dbname": "Homework",
     "user": "postgres",
     "password": "Danilo2001",
-    "host": "db",
+    "host": "postgres-db-service",
     "port": "5432"
 }
 
