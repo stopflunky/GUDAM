@@ -4,6 +4,7 @@ import file_pb2
 import file_pb2_grpc
 import uuid
 import time
+import re
 from grpc import RpcError
 
 is_authenticated = False # Variabile per memorizzare lo stato di autenticazione dell'utente
@@ -35,6 +36,13 @@ def validate_numeric_input(value, field_name):
     except ValueError:
         print(f"Errore: {field_name} deve essere un numero valido.")
         return None
+    
+#------------------------------------------------------------
+
+# Funzione per validare il formato dell'email
+def validate_email_format(email):
+    email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+    return re.match(email_regex, email) is not None
 
 #------------------------------------------------------------
 
@@ -62,6 +70,12 @@ def login_user(query_stub):
         return
 
     email = input("Inserisci l'email dell'utente per il login: ")
+    if not validate_email_format(email):
+        print("Errore: L'email inserita non è valida. Riprova.")
+        time.sleep(2)
+        clear_terminal()
+        return
+    
     password = input("Inserisci la password: ")
     hashed_password = hash_password(password)
     request = file_pb2.LoginRequest(email=email, password=hashed_password)
@@ -94,6 +108,12 @@ def create_user(command_stub):
         return
 
     email = input("Inserisci l'email dell'utente: ")
+    if not validate_email_format(email):
+        print("Errore: L'email inserita non è valida. Riprova.")
+        time.sleep(2)
+        clear_terminal()
+        return
+    
     password = input("Inserisci la password: ")
     hashed_password = hash_password(password)
     ticker = input("Inserisci il ticker dell'utente: ")
@@ -328,7 +348,7 @@ def get_tresholds(query_stub):
 
 def run():
     global is_authenticated
-    channel = grpc.insecure_channel('localhost:50051')
+    channel = grpc.insecure_channel('localhost:50051')  
     command_stub = file_pb2_grpc.CommandServiceStub(channel)
     query_stub = file_pb2_grpc.QueryServiceStub(channel)
 
