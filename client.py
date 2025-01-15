@@ -5,6 +5,8 @@ import file_pb2_grpc
 import uuid
 import time
 import re
+import os
+import platform
 from grpc import RpcError
 
 is_authenticated = False # Variabile per memorizzare lo stato di autenticazione dell'utente
@@ -16,7 +18,7 @@ TIMEOUT = 10  # Timeout in secondi per ogni tentativo
 
 # Funzione per pulire il terminale
 def clear_terminal():
-    pass
+    os.system('cls' if platform.system() == 'Windows' else 'clear')
 
 #------------------------------------------------------------
 

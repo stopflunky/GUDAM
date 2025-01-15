@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: alert-system-deployment
+  labels:
+    app: alert-system
 spec:
   replicas: 1
   selector:
@@ -12,6 +14,8 @@ spec:
       labels:
         app: alert-system
     spec:
+      imagePullSecrets:
+      - name: dockerhub-secret 
       initContainers:
       - name: wait-for-postgres
         image: busybox
@@ -20,7 +24,7 @@ spec:
         image: busybox
         command: ['sh', '-c', 'until nc -z -v -w30 kafka-broker 9092; do echo "Waiting for Kafka..."; sleep 5; done']
       containers:
-      - name: alert-system
+      - name: alert-system-container
         image: danilo238/gudam:gudam-alert_system
         resources:
           requests:
@@ -44,7 +48,7 @@ spec:
         - name: KAFKA_BROKER
           value: "kafka-broker:9092"
         ports:
-        - containerPort: 8080 
+        - containerPort: 50057
 
 
 ---
@@ -55,8 +59,10 @@ metadata:
   labels:
     app: alert-system
 spec:
+  selector:
+    app: alert-system
   ports:
   - name: http
     protocol: TCP
-    port: 8080
-    targetPort: 8080
+    port: 50057
+    targetPort: 50057

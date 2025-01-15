@@ -1,7 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres-db
+  name: postgres-db-deployment
+  labels:
+    app: postgres-db
 spec:
   replicas: 1
   selector:
@@ -12,8 +14,10 @@ spec:
       labels:
         app: postgres-db
     spec:
+      imagePullSecrets:
+      - name: dockerhub-secret 
       containers:
-      - name: postgres
+      - name: postgres-db-container
         image: postgres:15
         resources:
           requests:

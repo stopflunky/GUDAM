@@ -1,7 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: grpc-server
+  name: grpc-server-deployment
+  labels:
+    app: grpc-server  
 spec:
   replicas: 1
   selector:
@@ -12,12 +14,14 @@ spec:
       labels:
         app: grpc-server
     spec:
+      imagePullSecrets:
+      - name: dockerhub-secret 
       initContainers:
       - name: init-postgres
         image: busybox
         command: ['sh', '-c', 'until nc -z -v -w30 postgres-db-service 5432; do echo "Waiting for PostgreSQL..."; sleep 5; done']
       containers:
-      - name: grpc-server
+      - name: grpc-server-container
         image: danilo238/gudam:gudam-grpc_server
         resources:
           requests:
@@ -44,7 +48,6 @@ spec:
 
 ---
 
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -54,12 +57,12 @@ spec:
   selector:
     app: grpc-server
   ports:
-  - name: grpc-server-port
-    protocol: TCP
-    port: 50051
-    targetPort: 50051
-    nodePort: 30001
-  - name: prometheus-server-port
-    protocol: TCP
-    port: 9999
-    targetPort: 9999
+    - name: grpc-server-port
+      protocol: TCP
+      port: 50051
+      targetPort: 50051
+      nodePort: 30001
+    - name: prometheus-server-port
+      protocol: TCP
+      port: 9999
+      targetPort: 9999

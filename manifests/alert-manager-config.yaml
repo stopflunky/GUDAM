@@ -1,7 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: alertmanager
+  name: alertmanager-deployment
+  labels:
+    app: alertmanager
 spec:
   replicas: 1
   selector:
@@ -12,8 +14,10 @@ spec:
       labels:
         app: alertmanager
     spec:
+      imagePullSecrets:
+      - name: dockerhub-secret 
       containers:
-      - name: alertmanager
+      - name: alertmanager-container
         image: danilo238/gudam:gudam-alert_manager
         args:
         - "--config.file=/etc/alertmanager/config.yml"
@@ -75,6 +79,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: alertmanager-service
+  labels:
+    app: alertmanager
 spec:
   selector:
     app: alertmanager

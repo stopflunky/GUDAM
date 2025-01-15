@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: datacollector-deployment
+  labels:
+    app: datacollector
 spec:
   replicas: 1
   selector:
@@ -12,6 +14,8 @@ spec:
       labels:
         app: datacollector
     spec:
+      imagePullSecrets:
+      - name: dockerhub-secret 
       initContainers:
       - name: wait-for-postgres
         image: busybox
@@ -21,7 +25,7 @@ spec:
         
         command: ['sh', '-c', 'until nc -z kafka-broker 9092; do echo "Waiting for Kafka..."; sleep 5; done']
       containers:
-      - name: datacollector
+      - name: datacollector-container
         image: danilo238/gudam:gudam-datacollector
         resources:
           requests:
@@ -45,21 +49,22 @@ spec:
         - name: KAFKA_BROKER
           value: "kafka-broker:9092"
         ports:
-        - containerPort: 50052  
+        - containerPort: 50056 
 
 
 ---
-
 
 apiVersion: v1
 kind: Service
 metadata:
   name: datacollector-service
+  labels:
+    app: datacollector
 spec:
-  type: ClusterIP
   selector:
     app: datacollector
   ports:
-  - protocol: TCP
-    port: 50052
-    targetPort: 50052
+  - name: http
+    protocol: TCP
+    port: 50056
+    targetPort: 50056

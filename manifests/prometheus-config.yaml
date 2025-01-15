@@ -14,6 +14,8 @@ spec:
       labels:
         app: prometheus
     spec:
+      imagePullSecrets:
+      - name: dockerhub-secret 
       containers:
       - name: prometheus-container
         image: danilo238/gudam:gudam-prometheus
@@ -75,7 +77,7 @@ data:
       alertmanagers:
         - static_configs:
             - targets:
-                - 'alert-manager-service:9093'
+                - 'alertmanager-service:9093'
 
     scrape_configs:
       - job_name: 'prometheus'
@@ -86,11 +88,11 @@ data:
           - targets: ['datacollector-service:50056']
       - job_name: 'server'
         static_configs:
-          - targets: ['grpc-server-service:50051']
+          - targets: ['grpc-server-service:9999']
       - job_name: 'alert-system'
         static_configs:
           - targets: ['alert-system-service:50057']
-      - job_name: 'alert-notification'
+      - job_name: 'alert-notifier'
         static_configs:
           - targets: ['alert-notifier-system-service:50058']
 
@@ -109,7 +111,7 @@ data:
       - name: ServerAlerts
         rules:
           - alert: HighRequestCount
-            expr: request_counter_total > 10
+            expr: s_request_counter_total > 10
             for: 10s
             labels:
               severity: critical
@@ -117,7 +119,7 @@ data:
               summary: "Numero elevato di richieste"
               description: "Il numero totale di richieste HTTP ha superato 10 nel sistema."
           - alert: HighUserCount
-            expr: user_counter > 3
+            expr: s_user_counter > 3
             for: 10s
             labels:
               severity: critical
@@ -128,7 +130,7 @@ data:
       - name: DataCollectorAlerts
         rules:
           - alert: HighTickersCount
-            expr: tickers_count > 100
+            expr: dc_tickers_count > 100
             for: 1m
             labels:
               severity: warning
@@ -136,7 +138,7 @@ data:
               summary: "Numero elevato di tickers"
               description: "Il numero di tickers letti dal database ha superato 100. Verifica il sistema."
           - alert: HighMessagesCount
-            expr: rate(messages_count[1m]) > 50 
+            expr: rate(dc_messages_count[1m]) > 50 
             for: 1m
             labels:
               severity: critical
@@ -147,7 +149,7 @@ data:
       - name: AlertSystemAlerts
         rules:
           - alert: HighMessageProcessingTime
-            expr: message_processing_time > 1
+            expr: as_message_processing_time > 1
             for: 30s
             labels:
               severity: warning
@@ -155,7 +157,7 @@ data:
               summary: "Tempo elevato di elaborazione messaggi"
               description: "Il tempo medio per processare un messaggio ha superato 1 secondo. Controllare il sistema."
           - alert: HighMessagesConsumed
-            expr: rate(message_consumed_time[1m]) > 100
+            expr: rate(as_message_consumed_time[1m]) > 100
             for: 1m
             labels:
               severity: critical
@@ -163,7 +165,7 @@ data:
               summary: "Numero elevato di messaggi consumati"
               description: "Più di 100 messaggi al minuto sono stati consumati dal topic Kafka. Verificare l'integrità del sistema."
           - alert: HighMessagesProduced
-            expr: rate(message_produced_time[1m]) > 100
+            expr: rate(as_message_produced_time[1m]) > 100
             for: 1m
             labels:
               severity: critical

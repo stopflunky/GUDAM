@@ -12,6 +12,8 @@ spec:
       labels:
         app: zookeeper
     spec:
+      imagePullSecrets:
+      - name: dockerhub-secret 
       containers:
       - name: zookeeper
         image: confluentinc/cp-zookeeper:latest
