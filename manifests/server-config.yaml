@@ -54,7 +54,12 @@ spec:
   selector:
     app: grpc-server
   ports:
-  - protocol: TCP
+  - name: grpc-server-port
+    protocol: TCP
     port: 50051
     targetPort: 50051
-    nodePort: 30051 
+    nodePort: 30001
+  - name: prometheus-server-port
+    protocol: TCP
+    port: 9999
+    targetPort: 9999

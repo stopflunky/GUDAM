@@ -79,16 +79,20 @@ data:
 
     scrape_configs:
       - job_name: 'prometheus'
-        scrape_interval: 25s
-        metrics_path: '/metrics'
-        scheme: 'http'
         static_configs:
-          - targets:
-              - 'prometheus-service:9090'
-              - 'grpc-server-service:50051'
-              - 'datacollector-service:50056'
-              - 'alert-system-service:50057'
-              - 'alert-notifier-system-service:50058'
+          - targets: ['prometheus-service:9090']
+      - job_name: 'data-collector'
+        static_configs:
+          - targets: ['datacollector-service:50056']
+      - job_name: 'server'
+        static_configs:
+          - targets: ['grpc-server-service:50051']
+      - job_name: 'alert-system'
+        static_configs:
+          - targets: ['alert-system-service:50057']
+      - job_name: 'alert-notification'
+        static_configs:
+          - targets: ['alert-notifier-system-service:50058']
 
 ---
 
