@@ -18,10 +18,10 @@ spec:
         command: ['sh', '-c', 'until nc -z -v -w30 postgres-db-service 5432; do echo "Waiting for PostgreSQL..."; sleep 5; done']
       - name: wait-for-kafka
         image: busybox
-        command: ['sh', '-c', 'until nc -z -v -w30 kafka-service 9092; do echo "Waiting for Kafka..."; sleep 5; done']
+        command: ['sh', '-c', 'until nc -z -v -w30 kafka-broker 9092; do echo "Waiting for Kafka..."; sleep 5; done']
       containers:
       - name: alert-system
-        image: gudam-alert_system:latest
+        image: stopflunky/gudam:gudam-alert_system
         resources:
           requests:
             cpu: "500m"
@@ -42,12 +42,12 @@ spec:
         - name: DATABASE_NAME
           value: "Homework"
         - name: KAFKA_BROKER
-          value: "kafka-service:9092"
+          value: "kafka-broker:9092"
         ports:
         - containerPort: 8080  # Assicurati che questa sia la porta corretta
 
 
-
+---
 apiVersion: v1
 kind: Service
 metadata:

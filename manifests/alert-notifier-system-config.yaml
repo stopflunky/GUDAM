@@ -15,7 +15,7 @@ spec:
       initContainers:
       - name: wait-for-kafka
         image: busybox
-        command: ['sh', '-c', 'until nc -z -v -w30 kafka-service 9092; do echo "Waiting for Kafka..."; sleep 5; done']
+        command: ['sh', '-c', 'until nc -z -v -w30 kafka-broker 9092; do echo "Waiting for Kafka..."; sleep 5; done']
       containers:
       - name: alert-notifier-system
         image: stopflunky/gudam:gudam-alert_notifier_system
@@ -41,7 +41,7 @@ spec:
         - name: DATABASE_NAME
           value: "Homework"
         - name: KAFKA_BROKER
-          value: "kafka-service:9092"
+          value: "kafka-broker:9092"
         ports:
         - containerPort: 8081  # Modifica questa porta in base a quella che usa l'Alert Notifier System
 

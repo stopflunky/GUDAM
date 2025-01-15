@@ -18,7 +18,7 @@ spec:
         command: ['sh', '-c', 'until nc -z postgres-db-service 5432; do echo "Waiting for PostgreSQL..."; sleep 5; done']
       - name: wait-for-kafka
         image: busybox
-        command: ['sh', '-c', 'until nc -z kafka-service 9092; do echo "Waiting for Kafka..."; sleep 5; done']
+        command: ['sh', '-c', 'until nc -z kafka-broker 9092; do echo "Waiting for Kafka..."; sleep 5; done']
       containers:
       - name: datacollector
         image: stopflunky/gudam:gudam-datacollector
@@ -34,7 +34,7 @@ spec:
         - name: DATABASE_NAME
           value: "Homework"
         - name: KAFKA_BROKER
-          value: "kafka-service:9092"
+          value: "kafka-broker:9092"
         ports:
         - containerPort: 50052  # Sostituisci con la porta che il DataCollector ascolta, se necessario
 
