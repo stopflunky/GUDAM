@@ -7,6 +7,7 @@ from confluent_kafka import Producer
 import prometheus_client
 import socket
 
+# Definizione delle metriche di monitoraggio
 HOSTNAME = socket.gethostname()
 NODE_NAME = "data_collector"
 APP_NAME = "data_collector_exporter"
@@ -20,6 +21,24 @@ dc_tickers_count = prometheus_client.Gauge(
 dc_messages_produced_count = prometheus_client.Counter(
     'dc_messages_count', 
     'Numero di messaggi mandati al sistema di alert', 
+    ["hostname", "node_name", "app_name"]
+)
+
+dc_ticker_update_latency = prometheus_client.Histogram(
+    'dc_ticker_update_latency_seconds',
+    'Tempo necessario per aggiornare un ticker',
+    ["hostname", "node_name", "app_name"]
+)
+
+dc_failed_ticker_updates = prometheus_client.Counter(
+    'dc_failed_ticker_updates',
+    'Numero di aggiornamenti ticker falliti',
+    ["hostname", "node_name", "app_name"]
+)
+
+dc_circuit_breaker_open = prometheus_client.Counter(
+    'dc_circuit_breaker_open',
+    'Numero di volte in cui il circuito è stato aperto',
     ["hostname", "node_name", "app_name"]
 )
 
@@ -110,6 +129,7 @@ class CommandHandler:
 # Funzione per recuperare i dati di un ticker da yfinance
 def get_stock_data(ticker):
     try:
+        start_time = time.time()
         stock = yf.Ticker(ticker)
         data = stock.history(period="1d")
         if not data.empty:
@@ -121,6 +141,9 @@ def get_stock_data(ticker):
     except Exception as e:
         print(f"Errore durante il recupero dei dati per {ticker}: {e}")
         return None
+    finally:
+        duration = time.time() - start_time
+        dc_ticker_update_latency.labels(HOSTNAME, NODE_NAME, APP_NAME).observe(duration)
 
 
 def main():
@@ -149,17 +172,20 @@ def main():
 
                     except CircuitBreakerOpenException:
                         print(f"Circuito aperto durante l'aggiornamento del ticker {ticker.ticker_name}")
+                        dc_circuit_breaker_open.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
                     except Exception as e:
                         print(f"Errore durante l'aggiornamento del ticker {ticker.ticker_name}: {e}")
+                        dc_failed_ticker_updates.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
 
             except CircuitBreakerOpenException:
                 print(f"Circuito aperto durante la raccolta dati per {ticker.ticker_name}")
+                dc_circuit_breaker_open.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
             except Exception as e:
                 print(f"Errore durante la raccolta dati per {ticker.ticker_name}: {e}")
+                dc_failed_ticker_updates.labels(HOSTNAME, NODE_NAME, APP_NAME).inc()
 
         print("Update del ticker completato.")
         time.sleep(60)
-
 
 if __name__ == "__main__":
     main()

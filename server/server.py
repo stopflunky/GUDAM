@@ -9,6 +9,7 @@ import services.user_write_service as user_write_service
 import services.user_read_service as user_read_service
 import metrics
 import user_db
+import time
 from concurrent import futures
 
 #------------------------------------------------------------
@@ -20,7 +21,23 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
         self.conn = user_db.getConnection()
         self.cursor = self.conn.cursor()
 
+    # Funzione che monitora il tempo di risposta e gestisce gli errori
+    @staticmethod
+    def measure_latency(func):
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                metrics.s_errors_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
+                raise e
+            finally:
+                latency = time.time() - start_time
+                metrics.s_request_latency.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).observe(latency)
+        return wrapper
+
     # Funzione di creazione di un utente
+    @measure_latency
     def CreateUser(self, request, context):
         metrics.s_requests_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
         command = command_models.CreateUserCommand(request.email, request.password, request.ticker, request.lowValue, request.highValue, request.requestID)
@@ -30,26 +47,29 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
         return response
 
     # Funzione di aggiornamento del ticker di un utente
+    @measure_latency
     def UpdateUser(self, request, context):
         metrics.s_requests_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
         command = command_models.UpdateUserCommand(request.email, request.ticker, request.requestID)
         return user_write_service.CommandService._execute_update_user(self, command)
-    
-     # Funzione di aggiornamento dei valori di basso e alto di un utente
+
+    # Funzione di aggiornamento dei valori di basso e alto di un utente
+    @measure_latency
     def UpdateHighLow(self, request, context):
         metrics.s_requests_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
         command = command_models.UpdateThresholdsCommand(request.email, request.lowValue, request.highValue, request.requestID)
         return user_write_service.CommandService._execute_update_thresholds(self, command)
 
     # Funzione di cancellazione di un utente
-    def DeleteUser(self, request, context): 
+    @measure_latency
+    def DeleteUser(self, request, context):
         metrics.s_requests_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
-        command = command_models.DeleteUserCommand(request.email)     
+        command = command_models.DeleteUserCommand(request.email)
         response = user_write_service.CommandService._execute_delete_user(self, command)
         if response and response.message == "Successo":
             metrics.s_users_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).dec()
         return response
-        
+
 #------------------------------------------------------------
 
 # Implementazione del QueryServicer
@@ -59,45 +79,60 @@ class QueryService(file_pb2_grpc.QueryServiceServicer):
         self.conn = user_db.getConnection()
         self.cursor = self.conn.cursor()
 
+    # Funzione che monitora il tempo di risposta e gestisce gli errori
+    @staticmethod
+    def measure_latency(func):
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            metrics.s_query_in_progress.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                metrics.s_errors_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
+                raise e
+            finally:
+                latency = time.time() - start_time
+                metrics.s_request_latency.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).observe(latency)
+                metrics.s_query_in_progress.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).dec()
+        return wrapper
+
     # Funzione di ping per verificare se il server è attivo
+    @measure_latency
     def Ping(self, request, context):
         metrics.s_requests_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
         return file_pb2.PingMessage(message="pong")
 
     # Funzione di login per verificare se l'utente esiste nel DB
+    @measure_latency
     def LoginUser(self, request, context):
         metrics.s_requests_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
         query = query_models.LoginUserQuery(request.email, request.password)
-        response = user_read_service.QueryService._execute_login_user(self, query)
-        if response.message == "Successo":
-            metrics.s_users_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
-        return response
+        return user_read_service.QueryService._execute_login_user(self, query)
 
     # Funzione per ottenere il ticker di un utente
+    @measure_latency
     def GetTicker(self, request, context):
         metrics.s_requests_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
         query = query_models.GetTickerQuery(request.email)
-        response = user_read_service.QueryService._execute_get_ticker_user(self, query)
-        return response
+        return user_read_service.QueryService._execute_get_ticker_user(self, query)
 
     # Funzione per ottenere la media degli ultimi X giorni di un ticker
+    @measure_latency
     def GetAvaragePriceOfXDays(self, request, context):
         metrics.s_requests_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
         query = query_models.GetAveragePriceQuery(request.email, request.days)
-        response = user_read_service.QueryService._execute_get_average_price_of_x_days(self, query)
-        return response
-        
+        return user_read_service.QueryService._execute_get_average_price_of_x_days(self, query)
+
     # Funzione per ottenere le soglie (low_value e high_value) di un utente
+    @measure_latency
     def GetTresholds(self, request, context):
         metrics.s_requests_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
         query = query_models.GetThresholdsQuery(request.email)
-        response = user_read_service.QueryService._execute_get_thresholds(self, query)
-        return response
+        return user_read_service.QueryService._execute_get_thresholds(self, query)
 
 #------------------------------------------------------------
 
 def serve():
-    
     prometheus_client.start_http_server(9999)
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     file_pb2_grpc.add_CommandServiceServicer_to_server(CommandService(), server)

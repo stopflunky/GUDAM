@@ -1,6 +1,7 @@
 groups:
   - name: ServerAlerts
     rules:
+      # Alert per numero elevato di richieste
       - alert: HighRequestCount
         expr: request_counter_total > 10
         for: 10s
@@ -9,6 +10,8 @@ groups:
         annotations:
           summary: "Numero elevato di richieste"
           description: "Il numero totale di richieste HTTP ha superato 10 nel sistema."
+
+      # Alert per numero elevato di utenti
       - alert: HighUserCount
         expr: user_counter > 3
         for: 10s
@@ -18,8 +21,49 @@ groups:
           summary: "Numero elevato di utenti"
           description: "Il numero di utenti connessi ha superato 3 nel sistema."
 
+      # Alert per latenza elevata delle richieste
+      - alert: HighRequestLatency
+        expr: histogram_quantile(0.95, rate(s_request_latency_seconds_bucket[1m])) > 0.5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latenza elevata delle richieste"
+          description: "Il 95° percentile della latenza delle richieste supera 0.5 secondi negli ultimi 1 minuto."
+
+      # Alert per numero elevato di richieste lente
+      - alert: SlowRequestCount
+        expr: increase(s_request_latency_seconds_bucket{le="1"}[5m]) > 20
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Richieste lente elevate"
+          description: "Più di 20 richieste hanno superato 1 secondo di latenza negli ultimi 5 minuti."
+
+      # Alert per diminuzione inattesa del numero di utenti
+      - alert: UnexpectedUserDrop
+        expr: rate(user_counter[5m]) < 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Riduzione improvvisa del numero di utenti"
+          description: "Il numero di utenti connessi sta diminuendo in modo inatteso negli ultimi 5 minuti."
+
+      # Alert per assenza di richieste nel sistema
+      - alert: NoRequestsDetected
+        expr: rate(request_counter_total[5m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Nessuna richiesta rilevata"
+          description: "Non sono state rilevate richieste nel sistema negli ultimi 5 minuti."
+
   - name: DataCollectorAlerts
     rules:
+      # Avviso per troppi tickers letti
       - alert: HighTickersCount
         expr: tickers_count > 100
         for: 1m
@@ -28,6 +72,7 @@ groups:
         annotations:
           summary: "Numero elevato di tickers"
           description: "Il numero di tickers letti dal database ha superato 100. Verifica il sistema."
+      # Avviso per troppi messaggi mandati
       - alert: HighMessagesCount
         expr: rate(messages_count[1m]) > 50 
         for: 1m
@@ -36,6 +81,35 @@ groups:
         annotations:
           summary: "Numero elevato di messaggi inviati"
           description: "Il sistema ha inviato più di 50 messaggi al minuto. Potrebbe esserci un problema con il flusso dati."
+      # Avviso per troppi aggiornamenti falliti
+      - alert: HighFailedTickerUpdates
+        expr: rate(dc_failed_ticker_updates[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alto numero di aggiornamenti ticker falliti"
+          description: "Il tasso di aggiornamenti ticker falliti è superiore a 5/min negli ultimi 5 minuti."
+
+      # Avviso per circuito aperto frequentemente
+      - alert: HighCircuitBreakerOpens
+        expr: rate(dc_circuit_breaker_open[5m]) > 3
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Circuito aperto frequentemente"
+          description: "Il numero di aperture del circuito è maggiore di 3/min negli ultimi 5 minuti."
+
+      # Avviso per tempo di aggiornamento elevato
+      - alert: HighTickerUpdateLatency
+        expr: histogram_quantile(0.95, rate(dc_ticker_update_latency_seconds_bucket[5m])) > 2
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alto tempo di aggiornamento ticker"
+          description: "Il 95° percentile del tempo di aggiornamento dei ticker supera i 2 secondi."
     
   - name: AlertSystemAlerts
     rules:
