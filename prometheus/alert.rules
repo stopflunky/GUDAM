@@ -3,7 +3,7 @@ groups:
     rules:
       # Alert per numero elevato di richieste
       - alert: HighRequestCount
-        expr: request_counter_total > 10
+        expr: s_request_counter_total > 10
         for: 10s
         labels:
           severity: critical
@@ -13,7 +13,7 @@ groups:
 
       # Alert per numero elevato di utenti
       - alert: HighUserCount
-        expr: user_counter > 3
+        expr: s_user_counter > 3
         for: 10s
         labels:
           severity: critical
@@ -43,7 +43,7 @@ groups:
 
       # Alert per diminuzione inattesa del numero di utenti
       - alert: UnexpectedUserDrop
-        expr: rate(user_counter[5m]) < 0
+        expr: rate(s_user_counter[5m]) < 0
         for: 5m
         labels:
           severity: critical
@@ -53,7 +53,7 @@ groups:
 
       # Alert per assenza di richieste nel sistema
       - alert: NoRequestsDetected
-        expr: rate(request_counter_total[5m]) == 0
+        expr: rate(s_request_counter_total[5m]) == 0
         for: 5m
         labels:
           severity: critical
@@ -65,7 +65,7 @@ groups:
     rules:
       # Avviso per troppi tickers letti
       - alert: HighTickersCount
-        expr: tickers_count > 100
+        expr: dc_tickers_count > 100
         for: 1m
         labels:
           severity: warning
@@ -74,7 +74,7 @@ groups:
           description: "Il numero di tickers letti dal database ha superato 100. Verifica il sistema."
       # Avviso per troppi messaggi mandati
       - alert: HighMessagesCount
-        expr: rate(messages_count[1m]) > 50 
+        expr: rate(dc_messages_count[1m]) > 50 
         for: 1m
         labels:
           severity: critical
@@ -114,7 +114,7 @@ groups:
   - name: AlertSystemAlerts
     rules:
       - alert: HighMessageProcessingTime
-        expr: message_processing_time > 1
+        expr: as_message_processing_time > 1
         for: 30s
         labels:
           severity: warning
@@ -122,7 +122,7 @@ groups:
           summary: "Tempo elevato di elaborazione messaggi"
           description: "Il tempo medio per processare un messaggio ha superato 1 secondo. Controllare il sistema."
       - alert: HighMessagesConsumed
-        expr: rate(message_consumed_time[1m]) > 100
+        expr: rate(as_message_consumed_time[1m]) > 100
         for: 1m
         labels:
           severity: critical
@@ -130,7 +130,7 @@ groups:
           summary: "Numero elevato di messaggi consumati"
           description: "Più di 100 messaggi al minuto sono stati consumati dal topic Kafka. Verificare l'integrità del sistema."
       - alert: HighMessagesProduced
-        expr: rate(message_produced_time[1m]) > 100
+        expr: rate(as_message_produced_time[1m]) > 100
         for: 1m
         labels:
           severity: critical
