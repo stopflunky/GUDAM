@@ -28,6 +28,7 @@ The CQRS pattern is used to have a better mangament of the database's requests.
 **Sequence diagrams:**
 
 PingServer:
+
 ![Ping SSD](images/Ping-SSD.png)  
 The interaction begins when the Client invokes the `ping_server` method using a query stub. The Client then sends a `PingMessage`, which includes a parameter named `message`, to the Server. The Server processes this request and responds to the Client with a confirmation or a corresponding result. The communication is completed when the Client receives the response from the Server, concluding the ping operation. If the Server is down, the Client shows a negative access message.
 <br>
