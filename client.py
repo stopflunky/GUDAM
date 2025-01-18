@@ -173,11 +173,10 @@ def create_user(command_stub):
 
 #------------------------------------------------------------
 
-# Funzione per modificare i valori di low-value e high-value relativi al ticker
+# Funzione per modificare i valori di low-value e high-value relativi al ticker con retry e timeout
 def modify_ticker_values(command_stub):
-
     if not is_authenticated:
-        print("Devi effettuare il login o la registrazione prima di effetuare la modifica.")
+        print("Devi effettuare il login o la registrazione prima di effettuare la modifica.")
         time.sleep(2)
         clear_terminal()
         return
@@ -192,7 +191,7 @@ def modify_ticker_values(command_stub):
         if lowValue is None or highValue is None:
             continue
 
-        if lowValue > highValue:
+        if float(lowValue) > float(highValue):
             print("Il valore minimo non può essere maggiore di quello massimo.")
         else:
             break
@@ -200,17 +199,25 @@ def modify_ticker_values(command_stub):
     request_id = str(uuid.uuid4())
     request = file_pb2.ModifyLowHighRequest(email=current_email, requestID=request_id, lowValue=lowValue, highValue=highValue)
 
-    try:
-        response = command_stub.UpdateHighLow(request, timeout=TIMEOUT)
-        print(response.message)
-        time.sleep(2)
-        clear_terminal()
-        return
-
-    except RpcError as e:
-        print(f"Errore RPC: {e.code()} - {e.details()}")
-        time.sleep(2)
-        clear_terminal()
+    retries = 0
+    while retries < MAX_RETRIES:
+        try:
+            response = command_stub.UpdateHighLow(request, timeout=TIMEOUT)
+            print(response.message)
+            time.sleep(2)
+            clear_terminal()
+            return
+        except RpcError as e:
+            print(f"Errore RPC: {e.code()} - {e.details()}")
+            retries += 1
+            if retries < MAX_RETRIES:
+                print(f"Riprovo... Tentativo {retries}/{MAX_RETRIES}")
+                time.sleep(2)
+            else:
+                print("Numero massimo di tentativi raggiunto. Operazione non riuscita.")
+                time.sleep(2)
+                clear_terminal()
+                break
 
 #------------------------------------------------------------
 
