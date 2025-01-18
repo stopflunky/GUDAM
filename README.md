@@ -86,22 +86,28 @@ You need 2 essential tools: kubectl and minikube
 Let's start with kubectl:
 * For windows you need to type: `curl.exe -LO "https://dl.k8s.io/release/v1.32.0/bin/windows/amd64/kubectl.exe"`
 <br>
+
 * For Linux you need to type: `curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"`
 <br>
+
 * For Mac(m series) you need to type:`curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/arm64/kubectl"` 
 <br>
+
 Let's continue installing minikube: 
 * Windows: `winget install Kubernetes.minikube`
 <br>
+
 * Linux:
     * `curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64`
     * `sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64`
 <br>
+
 * Mac (m series):
     * `curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-darwin-arm64`
     * `sudo install minikube-darwin-arm64 /usr/local/bin/minikube`
 
 <br>
+
 If you have any dubts on the installation part please check the official installation pages of minikube or kubectl.
 
 ***
@@ -121,6 +127,7 @@ At that point all the services was created, if you want to see all the services 
 
 Don't worry if several services don't running at first time. You need to insert at minimum one record in the database for obtaining a correct state for all services.
 <br>
+
 #### Running the client:
 Please expose 50051 of the service with the comand:`kubectl port-forward svc/grpc-server-service 50051:50051`
 Now open another client and start client.py
