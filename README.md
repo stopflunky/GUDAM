@@ -26,21 +26,17 @@ The CQRS pattern is used to have a better mangament of the database's requests.
 <br>
 
 **Sequence diagrams:**
-
 PingServer:
-
 ![Ping SSD](images/Ping-SSD.png)  
 The interaction begins when the Client invokes the `ping_server` method using a query stub. The Client then sends a `PingMessage`, which includes a parameter named `message`, to the Server. The Server processes this request and responds to the Client with a confirmation or a corresponding result. The communication is completed when the Client receives the response from the Server, concluding the ping operation. If the Server is down, the Client shows a negative access message.
 <br>
 
 Login:
-
 ![Login SSD](images/Login-SSD.png)
  The interaction begins when the Client invokes the login_user method with a query stub. If the user is already authenticated, an alternative response is immediately returned to the client. Otherwise, the client proceeds by sending a LoginRequest, containing the user's email and password, to the Server. The server forwards this request to the UserReadService, which queries the user's credentials in the Database. The database processes the query and returns the result to the UserReadService, which then passes it back to the Server. Finally, the server sends the appropriate response to the client, completing the login process. 
 <br>
 
  CreateUser:
- 
  ![CreateUser SSD](images/CreateUser-SSD.png)
  The interaction begins when the Client sends a create_user request using a query stub. The client then provides user data, including email, password, ticker, lowValue, highValue, and requestID, which are encapsulated in a RegisterRequest sent to the Server.
 
@@ -50,7 +46,6 @@ Finally, the Server returns the result of the operation to the Client, completin
 <br>
 
 UpdateUser:
-
 ![UpdateUser SSD](images/UpdateUser-SSD.png)
 The interaction begins when the Client invokes the update_user method using a query stub. The Client inserts the data, including the email, ticker, and requestID, and sends a UserRequest to the Server.
 
@@ -60,7 +55,6 @@ The UserWriteService forwards the response to the Server, which in turn sends it
 <br>
 
 ModifyHighLow:
-
 ![ModifyHighLow SSD](images/ModifyHighLow-SSD.png)
 The sequence begins with the Client invoking the modify_ticker_values method using a query stub. The Client sends the data, including email, lowValue, highValue, and requestID, and triggers a ModifyHighLowRequest to the Server.
 
@@ -70,7 +64,6 @@ The UserWriteService then forwards the response back to the Server, which sends 
 <br>
 
 DeleteUser:
-
 ![DeleteUser SSD](images/DeleteUser-SSD.png)
 The process begins with the Client invoking the method delete_user using a query stub. The client, send the data, including the email of the current user.
 
@@ -80,7 +73,6 @@ The user is then logged out and his data are cleared from the database.
 <br>
 
 GetTicker:
-
 ![GetTicker SSD](images/GetTicker-SSD.png)
 The interaction starts when the Client sends a get_ticker request using a query stub. The request is passed to the Server, which processes it by invoking the execute_get_ticker_user method in the UserReadService.
 
@@ -88,7 +80,6 @@ The UserReadService then queries the Database with the user's email to retrieve 
 <br>
 
 GetAvaragePrice:
-
 ![GetAvaragePrice SSD](images/GetAvaragePrice-SSD.png)
 The process begins when the Client sends a GetAveragePriceOfXDays request using a query stub. The client provides the number of days and the user's email as parameters in the request, which is then forwarded to the Server.
 
@@ -96,7 +87,6 @@ The Server processes the request by invoking the execute_get_average_price_of_x_
 <br>
 
 GetThresholds:
-
 ![GetThresholds SSD](images/GetThresholds-SSD.png)
 This function is used from the user to retrieve his ticker's thresholds.
 
@@ -106,7 +96,6 @@ The query is then executed from the UserReadService, which invokes the method ex
 <br>
 
 DataCollector:
-
 ![DataCollector SSD](images/DataCollector-SSD.png)
 The process begins when the DataCollector invokes the query_tickers method to retrieve a list of tickers. For each ticker, the DataCollector calls the get_data_circuit_braker method to interact with the CircuitBreaker.
 
@@ -118,7 +107,6 @@ Finally, the DataCollector sends a produce request to Kafka, including a JSON pa
 <br>
 
 AlertSystem:
-
 ![AlertSystem SSD](images/AlertSystem-SSD.png)
 The process begins when the AlertSystem consumes a message from Kafka using the consume_message method. This triggers a consume call on a specific topic (topic1), retrieving a message containing ticker and last value information.
 
@@ -130,7 +118,6 @@ This process ensures timely alerts are sent to users while maintaining an update
 <br>
 
 ALertNotifierSystem:
-
 ![AlertManager SSD](images/AlertManager-SSD.png)
 The AlertNotifierSystems is the one that sends an email to the user, advising him that the ticker value has exceeded the thresholds.
 
