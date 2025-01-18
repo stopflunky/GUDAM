@@ -118,7 +118,7 @@ This process ensures timely alerts are sent to users while maintaining an update
 <br>
 
 ALertNotifierSystem:
-![AlertManager SSD](images/AlertManager-SSD.png)
+![AlertManager SSD](images/AlertNotifierSystem-SSD.png)
 The AlertNotifierSystems is the one that sends an email to the user, advising him that the ticker value has exceeded the thresholds.
 
 The AlertNotifierSystem consumes the message in the topic, afeter subscribing to it, and gets the message. Then, it creates an email message, if the condition is present, and sends it to the user, which the email is retrieved from the consumed message.
