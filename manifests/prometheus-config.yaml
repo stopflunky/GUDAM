@@ -110,6 +110,7 @@ data:
     groups:
     - name: ServerAlerts
       rules:
+        # Alert per numero elevato di richieste
         - alert: HighRequestCount
           expr: s_request_counter_total > 10
           for: 10s
@@ -119,6 +120,7 @@ data:
             summary: "Numero elevato di richieste"
             description: "Il numero totale di richieste HTTP ha superato 10 nel sistema."
 
+        # Alert per numero elevato di utenti
         - alert: HighUserCount
           expr: s_user_counter > 3
           for: 10s
@@ -128,6 +130,7 @@ data:
             summary: "Numero elevato di utenti"
             description: "Il numero di utenti connessi ha superato 3 nel sistema."
 
+        # Alert per latenza elevata delle richieste
         - alert: HighRequestLatency
           expr: histogram_quantile(0.95, rate(s_request_latency_seconds_bucket[1m])) > 0.5
           for: 1m
@@ -137,6 +140,7 @@ data:
             summary: "Latenza elevata delle richieste"
             description: "Il 95° percentile della latenza delle richieste supera 0.5 secondi negli ultimi 1 minuto."
 
+        # Alert per richieste lente
         - alert: SlowRequestCount
           expr: increase(s_request_latency_seconds_bucket{le="1"}[5m]) > 20
           for: 2m
@@ -146,6 +150,7 @@ data:
             summary: "Richieste lente elevate"
             description: "Più di 20 richieste hanno superato 1 secondo di latenza negli ultimi 5 minuti."
 
+        # Alert per utenti che si disconnettono in modo inatteso
         - alert: UnexpectedUserDrop
           expr: rate(s_user_counter[5m]) < 0
           for: 5m
@@ -155,6 +160,7 @@ data:
             summary: "Riduzione improvvisa del numero di utenti"
             description: "Il numero di utenti connessi sta diminuendo in modo inatteso negli ultimi 5 minuti."
 
+        # Alert per nessuna richiesta
         - alert: NoRequestsDetected
           expr: rate(s_request_counter_total[5m]) == 0
           for: 5m
@@ -163,6 +169,26 @@ data:
           annotations:
             summary: "Nessuna richiesta rilevata"
             description: "Non sono state rilevate richieste nel sistema negli ultimi 5 minuti."
+        
+        # ALert per troppi errori
+        - alert: TooManyErrors
+          eprs: s_errors_counter > 100
+          for: 5m
+          labels:
+            severity critical
+          annotations:
+            summary: "Troppe richieste non andate a buon fine"
+            description: "Il numero di richieste non andate a buon fine negli ultimi 5 minuti è troppo elevato."
+
+        # Alert per troppe query
+        - alert: TooManyErrors
+          eprs: s_query_in_progress > 100
+          for: 5m
+          labels:
+            severity critical
+          annotations:
+            summary: "Troppe query da gestire"
+            description: "Il numero di query da gestire negli ultimi 5 minuti è troppo elevato."
 
     - name: DataCollectorAlerts
       rules:

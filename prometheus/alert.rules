@@ -61,6 +61,26 @@ groups:
           summary: "Nessuna richiesta rilevata"
           description: "Non sono state rilevate richieste nel sistema negli ultimi 5 minuti."
 
+      # Alert per troppe richieste errate
+      - alert: TooManyErrors
+        eprs: s_errors_counter > 100
+        for: 5m
+        labels:
+          severity critical
+        annotations:
+          summary: "Troppe richieste non andate a buon fine"
+          description: "Il numero di richieste non andate a buon fine negli ultimi 5 minuti è troppo elevato."
+
+      # Alert per troppe query
+      - alert: TooManyErrors
+        eprs: s_query_in_progress > 100
+        for: 5m
+        labels:
+          severity critical
+        annotations:
+          summary: "Troppe query da gestire"
+          description: "Il numero di query da gestire negli ultimi 5 minuti è troppo elevato."
+
   - name: DataCollectorAlerts
     rules:
       # Avviso per troppi tickers letti

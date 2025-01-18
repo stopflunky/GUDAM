@@ -124,6 +124,33 @@ The AlertNotifierSystems is the one that sends an email to the user, advising hi
 The AlertNotifierSystem consumes the message in the topic, afeter subscribing to it, and gets the message. Then, it creates an email message, if the condition is present, and sends it to the user, which the email is retrieved from the consumed message.
 ***
 
+### Prometheus monitored metrics
+The metrics exposed from each microservise, implementing a Whitebox Monitoring, are useful to understand how the system is responding and to expose it's quality and efficieny of the system; however, the metrics are useful to think and take action to solve eventual problems.
+
+The metrics are:
+- Server:
+    - s_request_counter: number of requests arriving to the server.
+    - s_user_counter: number of active users (clients connetted to the server).
+    - s_request_latency_seconds: latency of each request in different moments. The are organized into an histogram, which could be better analyzed using Grafana.
+    - s_errors_counter: number of bad requests.
+
+- DataCollector:
+    - dc_tickers_count: numbers of tickers red from the database.
+    - dc_messages_produced_count: numbers of produced messages.
+    - dc_ticker_update_latency: latency of ticker updates, organized into an histogram.
+    - dc_failed_ticker_updates: numbers of failed updates.
+    - dc_circuit_breaker_open: numbers of time the CB is opened.
+
+- AlertSystem:
+    - as_messages_processing_time: time to process messages.
+    - as_messages_consumed_count: numbers of consumed messages.
+    - as_messages_produced_count: numbers of produced messages.
+
+- AlertNotifierSystem:
+    - ans_email_processing_time: time to process email sending.
+    - ans_sent_emails_count: numer of sent emails.
+***
+
 ## Before you start:
 #### Disclaimer:
 **This steps are to make a cluster and try it locally. If you want to use this configuration on your servers you may change several files.
