@@ -258,8 +258,7 @@ def delete_user(command_stub):
         clear_terminal()
         return
 
-    request_id = str(uuid.uuid4())
-    request = file_pb2.UserRequest(email=current_email, requestID=request_id)
+    request = file_pb2.DeleteUserRequest(email=current_email)
 
     try:
         response = command_stub.DeleteUser(request)
@@ -281,8 +280,7 @@ def get_ticker(stub):
         clear_terminal()
         return
 
-    request_id = str(uuid.uuid4())
-    request = file_pb2.UserRequest(email=current_email, requestID=request_id)
+    request = file_pb2.GetTickerRequest(email=current_email)
 
     try:
         response = stub.GetTicker(request)
@@ -333,8 +331,7 @@ def get_tresholds(query_stub):
         clear_terminal()
         return
 
-    request_id = str(uuid.uuid4())
-    request = file_pb2.UserRequest(email=current_email, requestID=request_id)
+    request = file_pb2.ThresholdsRequest(email=current_email)
 
     try:
         response = query_stub.GetTresholds(request)

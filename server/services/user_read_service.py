@@ -2,10 +2,12 @@ import file_pb2
 import yfinance as yf
 from datetime import datetime, timedelta
 
+# Definizione della classe QueryService
 class QueryService:
 
     # Funzione di login
     def _execute_login_user(self, command):
+        
         try:
             self.cursor.execute("SELECT email, password FROM users WHERE email = %s", (command.email,))
             user = self.cursor.fetchone()

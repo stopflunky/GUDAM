@@ -23,5 +23,6 @@ class UpdateThresholdsCommand:
         self.requestID = requestID
 
 class DeleteUserCommand:
-    def __init__(self, email):
+    def __init__(self, email, requestID):
         self.email = email
+        self.requestID = requestID

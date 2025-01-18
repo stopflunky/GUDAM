@@ -64,7 +64,7 @@ class CommandService(file_pb2_grpc.CommandServiceServicer):
     @measure_latency
     def DeleteUser(self, request, context):
         metrics.s_requests_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).inc()
-        command = command_models.DeleteUserCommand(request.email)
+        command = command_models.DeleteUserCommand(request.email, request.requestID)
         response = user_write_service.CommandService._execute_delete_user(self, command)
         if response and response.message == "Successo":
             metrics.s_users_counter.labels(metrics.HOSTNAME, metrics.NODE_NAME, metrics.APP_NAME).dec()

@@ -66,12 +66,12 @@ class CommandService:
     
     # Funzione di aggiornamento utente
     def _execute_update_user(self, command):
-        try:
-            # Cache hit
-            with cache_lock:
-                if command.requestID in request_cache:
-                    return request_cache[command.requestID]
+        with cache_lock:
+            if command.requestID in request_cache:
+                print(f"[CACHE HIT] La richiesta con ID {command.requestID} è già stata processata.")
+                return request_cache[command.requestID]
 
+        try:
             # Recupero ticker con cache HTTP
             stock = yf.Ticker(command.ticker)
             last_price = stock.history(period="1d")["Close"].iloc[-1]
